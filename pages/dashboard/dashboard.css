@@ -543,3 +543,109 @@ body::before {
   .db-hero { flex-direction: column; gap: 16px; }
   .db-hero-actions { flex-wrap: wrap; }
 }
+
+/* =============  DISABLED / GRAYED OUT STATES  ============= */
+.db-nav-disabled {
+  opacity: 0.38;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+.db-nav-soon {
+  margin-left: auto;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+.db-btn-disabled {
+  opacity: 0.35;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+.db-cta-disabled {
+  opacity: 0.38;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+.db-chip-disabled {
+  opacity: 0.38;
+  cursor: not-allowed !important;
+}
+.db-topbar-search-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.db-topbar-search-disabled input { cursor: not-allowed; }
+
+.db-upgrade-btn-disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  pointer-events: none;
+  font-size: 0.73rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 7px;
+  white-space: nowrap;
+}
+.db-find-mentor-disabled {
+  display: block;
+  text-align: center;
+  background: #f3f4f6;
+  color: #9ca3af;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 9px;
+  border-radius: 9px;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.db-coming-soon-tag {
+  font-size: .72rem;
+  font-weight: 600;
+  color: #9ca3af;
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+/* =============  EMPTY STATES  ============= */
+.db-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background: #fafafa;
+  border: 1.5px dashed #e5e7eb;
+  border-radius: 12px;
+  text-align: center;
+  gap: 8px;
+}
+.db-empty-state-sm { padding: 20px 16px; }
+
+.db-empty-icon {
+  width: 44px;
+  height: 44px;
+  color: #d1d5db;
+  margin-bottom: 4px;
+}
+.db-empty-state-sm .db-empty-icon { width: 32px; height: 32px; }
+
+.db-empty-title {
+  font-size: .87rem;
+  font-weight: 700;
+  color: #6b7280;
+}
+.db-empty-state-sm .db-empty-title { font-size: .8rem; }
+
+.db-empty-sub {
+  font-size: .77rem;
+  color: #9ca3af;
+  max-width: 280px;
+  line-height: 1.5;
+}
+.db-empty-state-sm .db-empty-sub { font-size: .72rem; }
