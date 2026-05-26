@@ -118,6 +118,10 @@
         <input type="text" placeholder="Search coming soon..." class="db-topbar-input" disabled />
       </div>
       <div class="db-topbar-right">
+        <button id="demo-toggle-btn" class="db-demo-btn" onclick="toggleDemoMode()" title="Toggle demo data so the team can see how the dashboard looks when populated">
+          <svg viewBox="0 0 20 20" fill="none" width="15" height="15"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="10" r="3" fill="currentColor"/></svg>
+          Demo Mode
+        </button>
         <span class="db-premium-badge">FREE</span>
         <button class="db-icon-btn db-btn-disabled" title="Notifications coming soon" disabled>
           <svg viewBox="0 0 20 20" fill="none"><path d="M10 2a6 6 0 00-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 00-6-6z" stroke="currentColor" stroke-width="1.6"/><path d="M8 16a2 2 0 004 0" stroke="currentColor" stroke-width="1.6"/></svg>
@@ -134,6 +138,13 @@
 
       <!-- FEED -->
       <main class="db-feed">
+
+        <!-- Demo mode banner (hidden by default) -->
+        <div id="demo-banner" class="db-demo-banner" style="display:none">
+          <svg viewBox="0 0 20 20" fill="none" width="16" height="16"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="10" r="3" fill="currentColor"/></svg>
+          <strong>DEMO MODE ON</strong> &mdash; All data shown below is placeholder content for illustration only. None of it is real.
+          <button onclick="toggleDemoMode()" class="db-demo-banner-close">Turn off</button>
+        </div>
 
         <!-- Hero -->
         <section class="db-hero">
@@ -173,7 +184,7 @@
         </section>
 
         <!-- Topics of Interest -->
-        <section class="db-section">
+        <section class="db-section" id="section-topics">
           <div class="db-section-header">
             <span class="db-section-title">Topics of Interest</span>
             <span class="db-coming-soon-tag">No data</span>
@@ -186,7 +197,7 @@
         </section>
 
         <!-- Featured Documents -->
-        <section class="db-section">
+        <section class="db-section" id="section-docs">
           <div class="db-section-header">
             <span class="db-section-title">Featured Documents</span>
             <span class="db-coming-soon-tag">No data</span>
@@ -199,7 +210,7 @@
         </section>
 
         <!-- Recommended For You -->
-        <section class="db-section">
+        <section class="db-section" id="section-recs">
           <div class="db-section-header">
             <span class="db-section-title">Recommended For You</span>
             <span class="db-coming-soon-tag">No data</span>
@@ -217,7 +228,7 @@
       <aside class="db-right-panel">
 
         <!-- Featured Discussions -->
-        <div class="db-panel-card">
+        <div class="db-panel-card" id="panel-discussions">
           <div class="db-panel-card-header">
             <span class="db-panel-card-title">Featured Discussions</span>
             <span class="db-coming-soon-tag">Soon</span>
@@ -230,7 +241,7 @@
         </div>
 
         <!-- Ongoing Surveys -->
-        <div class="db-panel-card">
+        <div class="db-panel-card" id="panel-surveys">
           <div class="db-panel-card-header">
             <span class="db-panel-card-title">Ongoing Surveys</span>
             <span class="db-coming-soon-tag">Soon</span>
@@ -243,7 +254,7 @@
         </div>
 
         <!-- Online Mentors -->
-        <div class="db-panel-card">
+        <div class="db-panel-card" id="panel-mentors">
           <div class="db-panel-card-header">
             <span class="db-panel-card-title">Online Mentors</span>
             <span class="db-coming-soon-tag">Soon</span>
@@ -257,7 +268,7 @@
         </div>
 
         <!-- Active Members -->
-        <div class="db-panel-card">
+        <div class="db-panel-card" id="panel-members">
           <div class="db-panel-card-header">
             <span class="db-panel-card-title">Active Members</span>
             <span class="db-coming-soon-tag">Soon</span>
@@ -274,23 +285,214 @@
   </div><!-- .db-main-wrapper -->
 
   <script>
+    // ---- Auth + user info ----
     (function() {
       try {
         const token = localStorage.getItem('rg_token');
         if (!token) { window.location.href = '../auth/login.html'; return; }
-
         const raw  = localStorage.getItem('rg_user');
         const user = raw ? JSON.parse(raw) : null;
         const name = user ? (user.full_name || user.username || 'Researcher') : 'Researcher';
         document.getElementById('db-hero-name').textContent   = name;
         document.getElementById('db-user-name').textContent   = name;
         document.getElementById('db-user-avatar').textContent = name.charAt(0).toUpperCase();
-
         const hour = new Date().getHours();
         document.getElementById('db-greeting').textContent =
           hour < 12 ? 'Good morning,' : hour < 17 ? 'Good afternoon,' : 'Good evening,';
       } catch(e) {}
     })();
+
+    // ---- Demo Mode ----
+    let demoOn = false;
+
+    // Snapshot of each section's real empty-state HTML (captured once on load)
+    const _originals = {};
+    ['section-topics','section-docs','section-recs',
+     'panel-discussions','panel-surveys','panel-mentors','panel-members'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) _originals[id] = el.innerHTML;
+    });
+
+    // ---- Demo content templates ----
+    const DEMO = {
+      'section-topics': `
+        <div class="db-section-header">
+          <span class="db-section-title">Topics of Interest</span>
+          <a href="#" class="db-section-link">See all</a>
+        </div>
+        <div class="db-cards-row">
+          <div class="db-topic-card">
+            <div class="db-topic-icon db-topic-icon-blue">
+              <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" opacity=".5"/><rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" opacity=".5"/><rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" opacity=".3"/></svg>
+            </div>
+            <div class="db-topic-name">Technology &amp; AI</div>
+            <div class="db-topic-count">2,840 papers</div>
+          </div>
+          <div class="db-topic-card">
+            <div class="db-topic-icon db-topic-icon-green">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 3C7 3 3 7 3 12a9 9 0 0018 0C21 7 17 3 12 3z" fill="currentColor" opacity=".3"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="db-topic-name">Environmental Science</div>
+            <div class="db-topic-count">1,620 papers</div>
+          </div>
+          <div class="db-topic-card">
+            <div class="db-topic-icon db-topic-icon-red">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 21C7 17 3 13 3 9a9 9 0 0118 0c0 4-4 8-9 12z" fill="currentColor" opacity=".3"/><circle cx="12" cy="9" r="3" fill="currentColor"/></svg>
+            </div>
+            <div class="db-topic-name">Medical &amp; Health</div>
+            <div class="db-topic-count">3,210 papers</div>
+          </div>
+        </div>`,
+
+      'section-docs': `
+        <div class="db-section-header">
+          <span class="db-section-title">Featured Documents</span>
+          <a href="#" class="db-section-link">Browse all</a>
+        </div>
+        <div class="db-doc-list">
+          ${docItem('Paper','paper','Attention is All You Need — A Deep Dive into Transformer Architectures','Vaswani et al. &middot; 2023 &middot; IEEE Xplore')}
+          ${docItem('Thesis','thesis','The Economic Impact of Renewable Energy Transitions in Southeast Asia','Nguyen, T.H. &middot; 2024 &middot; Harvard University')}
+          ${docItem('Report','report','Global Mental Health Index 2024: Trends, Insights &amp; Recommendations','WHO Collaboration &middot; 2024 &middot; Open Access')}
+        </div>`,
+
+      'section-recs': `
+        <div class="db-section-header">
+          <span class="db-section-title">Recommended For You</span>
+          <a href="#" class="db-section-link">Customise</a>
+        </div>
+        <div class="db-doc-list">
+          ${docItem('Conference','conference','Large Language Models in Scientific Discovery: Promises and Pitfalls','Chen et al. &middot; NeurIPS 2024 &middot; Nature')}
+          ${docItem('Paper','paper','Bias in Academic Publishing: A Systematic Review of Peer Review Processes','Smith &amp; Zhao &middot; 2023 &middot; Elsevier')}
+        </div>`,
+
+      'panel-discussions': `
+        <div class="db-panel-card-header">
+          <span class="db-panel-card-title">Featured Discussions</span>
+          <a href="#" class="db-section-link">View all</a>
+        </div>
+        <div class="db-discussion-list">
+          ${discussion('AI + Research','Will AI fully replace human peer reviewers in 10 years?','42 replies &middot; Active now')}
+          ${discussion('Open Science','Best practices for sharing raw datasets publicly','18 replies &middot; 2h ago')}
+          ${discussion('Career','PhD vs Industry Research: Which path is right for you?','73 replies &middot; 5h ago')}
+        </div>`,
+
+      'panel-surveys': `
+        <div class="db-panel-card-header">
+          <span class="db-panel-card-title">Ongoing Surveys</span>
+          <a href="#" class="db-section-link">Browse</a>
+        </div>
+        <div class="db-survey-list">
+          ${survey('Research Habits of Graduate Students 2024',68,'340 responses &middot; Ends Dec 31')}
+          ${survey('AI Tool Usage Among Researchers',41,'205 responses &middot; Ends Jan 15')}
+        </div>`,
+
+      'panel-mentors': `
+        <div class="db-panel-card-header">
+          <span class="db-panel-card-title">Online Mentors</span>
+          <a href="#" class="db-section-link">See all</a>
+        </div>
+        <div class="db-mentor-list">
+          ${mentor('A','db-avatar-a','Dr. Amara K.','Machine Learning','db-dot-online')}
+          ${mentor('R','db-avatar-b','Prof. Ren Wei','Environmental Science','db-dot-online')}
+          ${mentor('S','db-avatar-c','Sara M. PhD','Neuroscience','db-dot-away')}
+        </div>
+        <span class="db-find-mentor-disabled">Find a Mentor — Coming Soon</span>`,
+
+      'panel-members': `
+        <div class="db-panel-card-header">
+          <span class="db-panel-card-title">Active Members</span>
+          <a href="#" class="db-section-link">Explore</a>
+        </div>
+        <div class="db-active-members">
+          <div class="db-member-avatar db-avatar-d">L</div>
+          <div class="db-member-avatar db-avatar-e">M</div>
+          <div class="db-member-avatar db-avatar-f">J</div>
+          <div class="db-member-avatar db-avatar-g">T</div>
+          <div class="db-member-avatar db-avatar-a">K</div>
+          <div class="db-member-more">+2.4k</div>
+        </div>
+        <div class="db-member-online-label">2,418 researchers online now</div>`
+    };
+
+    // ---- Helper renderers ----
+    function docItem(label, type, title, meta) {
+      return `<div class="db-doc-item">
+        <div class="db-doc-type-badge db-doc-type-${type}">${label}</div>
+        <div class="db-doc-info">
+          <div class="db-doc-title">${title}</div>
+          <div class="db-doc-meta">${meta}</div>
+        </div>
+        <div class="db-doc-save"><svg viewBox="0 0 20 20" fill="none"><path d="M5 3h10v14l-5-3-5 3V3z" stroke="currentColor" stroke-width="1.6"/></svg></div>
+      </div>`;
+    }
+    function discussion(tag, text, meta) {
+      return `<div class="db-discussion-item">
+        <div class="db-discussion-tag">${tag}</div>
+        <div class="db-discussion-text">${text}</div>
+        <div class="db-discussion-meta">${meta}</div>
+      </div>`;
+    }
+    function survey(title, pct, meta) {
+      return `<div class="db-survey-item">
+        <div class="db-survey-title">${title}</div>
+        <div class="db-survey-bar-wrap">
+          <div class="db-survey-bar"><div class="db-survey-fill" style="width:${pct}%"></div></div>
+          <span class="db-survey-pct">${pct}%</span>
+        </div>
+        <div class="db-survey-meta">${meta}</div>
+      </div>`;
+    }
+    function mentor(letter, avatarClass, name, field, dotClass) {
+      return `<div class="db-mentor-item">
+        <div class="db-mentor-avatar ${avatarClass}">${letter}</div>
+        <div class="db-mentor-info">
+          <div class="db-mentor-name">${name}</div>
+          <div class="db-mentor-field">${field}</div>
+        </div>
+        <div class="db-mentor-dot ${dotClass}"></div>
+      </div>`;
+    }
+
+    // ---- Toggle logic ----
+    function toggleDemoMode() {
+      demoOn = !demoOn;
+      const btn    = document.getElementById('demo-toggle-btn');
+      const banner = document.getElementById('demo-banner');
+
+      if (demoOn) {
+        // Swap in demo content
+        Object.keys(DEMO).forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.innerHTML = DEMO[id]; el.classList.add('demo-active'); }
+        });
+        // Enable chips
+        document.querySelectorAll('.db-chip-disabled').forEach(c => {
+          c.classList.remove('db-chip-disabled'); c.removeAttribute('disabled');
+        });
+        // Enable hero buttons visually
+        document.querySelectorAll('.db-cta-disabled').forEach(c => c.classList.remove('db-cta-disabled'));
+
+        btn.classList.add('db-demo-btn-on');
+        btn.innerHTML = `<svg viewBox="0 0 20 20" fill="none" width="15" height="15"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="10" r="3" fill="currentColor"/></svg> Demo: ON`;
+        banner.style.display = 'flex';
+      } else {
+        // Restore empty states
+        Object.keys(_originals).forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.innerHTML = _originals[id]; el.classList.remove('demo-active'); }
+        });
+        // Restore chips
+        document.querySelectorAll('.db-chip').forEach(c => {
+          c.classList.add('db-chip-disabled'); c.setAttribute('disabled','');
+        });
+        // Restore hero buttons
+        document.querySelectorAll('.db-cta-btn').forEach(c => c.classList.add('db-cta-disabled'));
+
+        btn.classList.remove('db-demo-btn-on');
+        btn.innerHTML = `<svg viewBox="0 0 20 20" fill="none" width="15" height="15"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="10" r="3" fill="currentColor"/></svg> Demo Mode`;
+        banner.style.display = 'none';
+      }
+    }
   </script>
 </body>
 </html>
