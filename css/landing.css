@@ -1,0 +1,282 @@
+/* ===== Landing Page Styles ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ---- Vignette (landing uses its own CSS, not shared.css) ---- */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    transparent 55%,
+    rgba(0, 0, 0, 0.18) 100%
+  );
+}
+
+
+:root {
+  --pri:       #6c47ff;
+  --pri-hover: #5535e0;
+  --student:   #6c47ff;
+  --researcher:#0ea5e9;
+  --other:     #f97316;
+  --bg:        #f5f4ff;
+  --surface:   #ffffff;
+  --text:      #1a1a2e;
+  --muted:     #6b7280;
+  --radius:    16px;
+  --shadow:    0 4px 24px rgba(108,71,255,0.10);
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Top Bar ---- */
+.landing-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 48px;
+  background: #fff;
+  border-bottom: 1px solid #ede9ff;
+}
+
+.landing-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.landing-logo-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--pri);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+}
+
+.landing-logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.landing-logo-text strong {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.landing-logo-text span {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.landing-topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.landing-topbar-nav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.landing-topbar-nav a:hover { color: var(--pri); }
+
+.btn-login {
+  padding: 8px 20px;
+  border: 1.5px solid var(--pri);
+  border-radius: 8px;
+  color: var(--pri);
+  background: transparent;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-login:hover {
+  background: var(--pri);
+  color: #fff;
+}
+
+/* ---- Hero ---- */
+.landing-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px 40px;
+  text-align: center;
+}
+
+.landing-hero h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 14px;
+  line-height: 1.15;
+}
+
+.landing-hero h1 span {
+  color: var(--pri);
+}
+
+.landing-hero p {
+  font-size: 1.05rem;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.landing-divider {
+  width: 48px;
+  height: 4px;
+  background: var(--pri);
+  border-radius: 4px;
+  margin: 20px auto 14px;
+}
+
+.landing-iam {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 36px;
+}
+
+/* ---- Role Cards ---- */
+.landing-cards {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 900px;
+  width: 100%;
+}
+
+.role-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 36px 28px 28px;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1.5px solid transparent;
+}
+
+.role-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(108,71,255,0.15);
+}
+
+.role-card-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  font-size: 2rem;
+}
+
+.role-card h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.role-card p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.55;
+  margin-bottom: 24px;
+  flex: 1;
+}
+
+.role-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  color: #fff;
+}
+
+.role-btn:hover {
+  opacity: 0.88;
+  transform: scale(1.02);
+}
+
+/* Student */
+.role-card.student .role-card-icon { background: #ede9ff; }
+.role-card.student h2 { color: var(--student); }
+.role-card.student .role-btn { background: var(--student); }
+.role-card.student { border-color: #ede9ff; }
+.role-card.student:hover { border-color: var(--student); }
+
+/* Researcher */
+.role-card.researcher .role-card-icon { background: #e0f5ff; }
+.role-card.researcher h2 { color: var(--researcher); }
+.role-card.researcher .role-btn { background: var(--researcher); }
+.role-card.researcher { border-color: #e0f5ff; }
+.role-card.researcher:hover { border-color: var(--researcher); }
+
+/* Other */
+.role-card.other .role-card-icon { background: #fff3eb; }
+.role-card.other h2 { color: var(--other); }
+.role-card.other .role-btn { background: var(--other); }
+.role-card.other { border-color: #fff3eb; }
+.role-card.other:hover { border-color: var(--other); }
+
+/* ---- Footer ---- */
+.landing-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.landing-footer svg { flex-shrink: 0; }
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .landing-topbar { padding: 14px 20px; }
+  .landing-hero h1 { font-size: 2rem; }
+  .role-card { width: 100%; max-width: 320px; }
+  .landing-cards { flex-direction: column; align-items: center; }
+}

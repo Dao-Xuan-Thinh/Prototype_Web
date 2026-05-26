@@ -1,0 +1,135 @@
+/* ===== Shared Navbar + Footer (new pages only) ===== */
+
+/* ---- Page vignette overlay ---- */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    transparent 55%,
+    rgba(0, 0, 0, 0.18) 100%
+  );
+}
+
+
+/* Shared Navbar */
+.shared-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 58px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.shared-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 110px;
+}
+
+.nav-hist-btn {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #6b7280;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, color 0.2s;
+  line-height: 1;
+  padding: 0;
+}
+
+.nav-hist-btn:hover {
+  border-color: #6c47ff;
+  color: #6c47ff;
+}
+
+.shared-nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.shared-nav-logo-icon {
+  width: 36px;
+  height: 36px;
+  background: #6c47ff;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.shared-nav-logo-text {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+
+.logo-research { color: #1a1a2e; }
+.logo-gate     { color: #6c47ff; }
+
+.shared-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 110px;
+  justify-content: flex-end;
+}
+
+.shared-nav-login {
+  padding: 8px 20px;
+  border: 1.5px solid #6c47ff;
+  border-radius: 8px;
+  color: #6c47ff;
+  background: transparent;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.shared-nav-login:hover {
+  background: #6c47ff;
+  color: #fff;
+}
+
+/* Shared Footer */
+.shared-footer {
+  text-align: center;
+  padding: 16px;
+  font-size: 0.78rem;
+  color: #6b7280;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.shared-footer a {
+  color: #6c47ff;
+  text-decoration: none;
+}
+
+.shared-footer a:hover { text-decoration: underline; }

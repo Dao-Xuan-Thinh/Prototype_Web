@@ -9,11 +9,56 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const mammoth = require("mammoth");
+const nodemailer = require("nodemailer");
 let sharp;
 try { sharp = require("sharp"); } catch (e) { sharp = null; }
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || "change_this_secret";
+
+// --- Email transporter (nodemailer) ---
+const emailConfigured = !!(process.env.EMAIL_USER && process.env.EMAIL_PASS &&
+  process.env.EMAIL_USER !== 'your_email@gmail.com');
+
+const transporter = nodemailer.createTransport(
+  emailConfigured
+    ? {
+        service: process.env.EMAIL_SERVICE || 'gmail',
+        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+      }
+    : { jsonTransport: true } // dev mode: logs to console instead of sending
+);
+
+function generateVerifyCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+async function sendVerificationEmail(toEmail, username, code) {
+  const mailOptions = {
+    from: process.env.EMAIL_FROM || 'ResearchGate <noreply@researchgate.app>',
+    to: toEmail,
+    subject: 'Your ResearchGate verification code',
+    html: `
+      <div style="font-family:Segoe UI,sans-serif;max-width:480px;margin:auto;padding:32px;border:1px solid #e5e7eb;border-radius:12px;">
+        <h2 style="color:#6c47ff;margin-bottom:8px;">ResearchGate</h2>
+        <p style="color:#1a1a2e;font-size:1rem;">Hi <strong>${username}</strong>,</p>
+        <p style="color:#374151;">Use the code below to verify your email address. It expires in <strong>10 minutes</strong>.</p>
+        <div style="font-size:2.5rem;font-weight:800;letter-spacing:12px;color:#6c47ff;text-align:center;background:#f5f4ff;border-radius:10px;padding:20px 0;margin:24px 0;">
+          ${code}
+        </div>
+        <p style="color:#6b7280;font-size:0.85rem;">If you didn't create a ResearchGate account, you can safely ignore this email.</p>
+      </div>
+    `
+  };
+
+  if (!emailConfigured) {
+    console.log('\n[DEV] Email not configured — verification code for', toEmail, ':', code, '\n');
+    return;
+  }
+
+  await transporter.sendMail(mailOptions);
+}
+
 
 // Uploads directories
 const uploadsDir = path.join(__dirname, "uploads");
@@ -108,6 +153,31 @@ db.serialize(() => {
   db.run("ALTER TABLE users ADD COLUMN avatar_url TEXT", () => {});
   db.run("ALTER TABLE users ADD COLUMN last_seen DATETIME", () => {});
   db.run("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'member'", () => {});
+  // Extended user profile columns
+  db.run("ALTER TABLE users ADD COLUMN full_name TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN phone TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN date_of_birth TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN gender TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN country TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN language TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN school TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN research_field TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN bio TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN institution TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN linkedin_url TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN google_scholar_url TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN rg_url TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN orcid_url TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN research_tags TEXT DEFAULT '[]'", () => {});
+  db.run("ALTER TABLE users ADD COLUMN topics TEXT DEFAULT '[]'", () => {});
+  db.run("ALTER TABLE users ADD COLUMN doc_types TEXT DEFAULT '[]'", () => {});
+  db.run("ALTER TABLE users ADD COLUMN journals TEXT DEFAULT '[]'", () => {});
+  db.run("ALTER TABLE users ADD COLUMN goals TEXT DEFAULT '[]'", () => {});
+  db.run("ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0", () => {});
+  db.run("ALTER TABLE users ADD COLUMN verify_token TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN verify_code TEXT", () => {});
+  db.run("ALTER TABLE users ADD COLUMN verify_code_expires INTEGER", () => {});
+  db.run("ALTER TABLE users ADD COLUMN google_id TEXT", () => {});
   db.run("ALTER TABLE documents ADD COLUMN doc_type TEXT DEFAULT 'General'", () => {});
   db.run("ALTER TABLE documents ADD COLUMN univ TEXT DEFAULT ''", () => {});
   db.run("ALTER TABLE forum_posts ADD COLUMN image_url TEXT", () => {});
@@ -240,37 +310,181 @@ function requireAuth(req, res, next) {
 
 // --- Auth routes ---
 app.post("/api/auth/signup", async (req, res) => {
-  const { username, email, password } = req.body;
+  const {
+    username, email, password,
+    full_name, phone, date_of_birth, gender, country, language,
+    role: userRole, school, research_field,
+    bio, institution, linkedin_url, google_scholar_url, rg_url, orcid_url,
+    research_tags, topics, doc_types, journals, goals
+  } = req.body;
 
   if (!username || !email || !password) {
-    return res.status(400).json({ error: "All fields are required" });
+    return res.status(400).json({ error: "Username, email, and password are required" });
   }
   if (password.length < 6) {
     return res.status(400).json({ error: "Password must be at least 6 characters" });
   }
+  if (!/[A-Z]/.test(password)) {
+    return res.status(400).json({ error: "Password must contain at least one uppercase letter" });
+  }
+  if (!/[0-9]/.test(password)) {
+    return res.status(400).json({ error: "Password must contain at least one number" });
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: "Invalid email format" });
+  }
 
   try {
     const hash = await bcrypt.hash(password, 10);
+    const code    = generateVerifyCode();
+    const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
     db.run(
-      "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
-      [username, email, hash],
-      function (err) {
+      `INSERT INTO users (
+        username, email, password_hash,
+        full_name, phone, date_of_birth, gender, country, language,
+        role, school, research_field,
+        bio, institution, linkedin_url, google_scholar_url, rg_url, orcid_url,
+        research_tags, topics, doc_types, journals, goals,
+        email_verified, verify_code, verify_code_expires
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
+      [
+        username, email, hash,
+        full_name || '', phone || '', date_of_birth || '', gender || '', country || '', language || '',
+        userRole || 'member', school || '', research_field || '',
+        bio || '', institution || '', linkedin_url || '', google_scholar_url || '', rg_url || '', orcid_url || '',
+        research_tags || '[]', topics || '[]', doc_types || '[]', journals || '[]', goals || '[]',
+        code, expires
+      ],
+      async function (err) {
         if (err) {
           if (err.message.includes("UNIQUE")) {
             return res.status(409).json({ error: "Username or email already exists" });
           }
           return res.status(500).json({ error: err.message });
         }
-        const token = jwt.sign(
-          { id: this.lastID, username, email, tier: "member", role: "member" },
-          JWT_SECRET,
-          { expiresIn: "7d" }
-        );
-        res.json({ token, user: { id: this.lastID, username, email, tier: "member", role: "member" } });
+        const userId = this.lastID;
+        // Send verification email (async — don't block response)
+        sendVerificationEmail(email, username, code).catch(e => console.error('Email send error:', e));
+
+        res.json({
+          userId,
+          requiresVerification: true,
+          message: "Account created. Please check your email for a 6-digit verification code.",
+          user: { id: userId, username, email, tier: "member", role: userRole || "member" }
+        });
       }
     );
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Verify email with 6-digit code
+app.post("/api/auth/verify-code", (req, res) => {
+  const { userId, code } = req.body;
+  if (!userId || !code) return res.status(400).json({ error: "userId and code are required" });
+
+  db.get("SELECT * FROM users WHERE id = ?", [userId], (err, user) => {
+    if (err || !user) return res.status(404).json({ error: "User not found" });
+    if (user.email_verified) return res.status(400).json({ error: "Email already verified" });
+    if (!user.verify_code || user.verify_code !== code.trim()) {
+      return res.status(400).json({ error: "Invalid verification code" });
+    }
+    if (Date.now() > user.verify_code_expires) {
+      return res.status(400).json({ error: "Verification code has expired. Please request a new one." });
+    }
+
+    db.run(
+      "UPDATE users SET email_verified = 1, verify_code = NULL, verify_code_expires = NULL WHERE id = ?",
+      [userId],
+      (err2) => {
+        if (err2) return res.status(500).json({ error: err2.message });
+        const token = jwt.sign(
+          { id: user.id, username: user.username, email: user.email, tier: user.tier, role: user.role || "member" },
+          JWT_SECRET,
+          { expiresIn: "7d" }
+        );
+        res.json({ token, user: { id: user.id, username: user.username, email: user.email, tier: user.tier, role: user.role || "member" } });
+      }
+    );
+  });
+});
+
+// Resend verification code
+app.post("/api/auth/resend-code", (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: "userId is required" });
+
+  db.get("SELECT * FROM users WHERE id = ?", [userId], async (err, user) => {
+    if (err || !user) return res.status(404).json({ error: "User not found" });
+    if (user.email_verified) return res.status(400).json({ error: "Email already verified" });
+
+    const code    = generateVerifyCode();
+    const expires = Date.now() + 10 * 60 * 1000;
+
+    db.run(
+      "UPDATE users SET verify_code = ?, verify_code_expires = ? WHERE id = ?",
+      [code, expires, userId],
+      async (err2) => {
+        if (err2) return res.status(500).json({ error: err2.message });
+        await sendVerificationEmail(user.email, user.username, code).catch(e => console.error('Email error:', e));
+        res.json({ message: "New verification code sent to " + user.email });
+      }
+    );
+  });
+});
+
+// ---- Google Client ID config (safe to expose – it's public) ----
+app.get("/api/config/google-client-id", (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID || '';
+  res.json({ clientId: clientId && clientId !== 'your_google_client_id' ? clientId : '' });
+});
+
+// ---- Google OAuth sign-in / sign-up ----
+app.post("/api/auth/google", async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) return res.status(400).json({ error: "Missing credential" });
+
+  try {
+    // Verify the ID token with Google
+    const infoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+    if (!infoRes.ok) return res.status(401).json({ error: "Invalid Google token" });
+    const info = await infoRes.json();
+
+    const { email, name, sub: googleId, picture } = info;
+    if (!email) return res.status(401).json({ error: "Could not get email from Google" });
+
+    // Find or create user
+    db.get("SELECT * FROM users WHERE email = ?", [email], async (err, user) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      if (!user) {
+        // Auto-generate username from email prefix
+        const base = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 24);
+        const username = base + '_' + Math.floor(1000 + Math.random() * 9000);
+        db.run(
+          `INSERT INTO users (username, email, password_hash, full_name, avatar_url, email_verified, google_id)
+           VALUES (?, ?, ?, ?, ?, 1, ?)`,
+          [username, email, '', name || username, picture || '', googleId],
+          function (err2) {
+            if (err2) return res.status(500).json({ error: err2.message });
+            const newUser = { id: this.lastID, username, email, tier: 'free', role: 'member' };
+            const token = jwt.sign({ ...newUser }, JWT_SECRET, { expiresIn: "7d" });
+            res.json({ token, user: newUser });
+          }
+        );
+      } else {
+        const token = jwt.sign(
+          { id: user.id, username: user.username, email: user.email, tier: user.tier || 'free', role: user.role || "member" },
+          JWT_SECRET, { expiresIn: "7d" }
+        );
+        res.json({ token, user: { id: user.id, username: user.username, email: user.email, tier: user.tier || 'free', role: user.role || "member" } });
+      }
+    });
+  } catch (e) {
+    console.error('Google auth error:', e);
+    res.status(500).json({ error: "Google authentication failed" });
   }
 });
 

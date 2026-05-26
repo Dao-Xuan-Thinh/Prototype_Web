@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Complete Profile — ResearchGate</title>
+  <link rel="stylesheet" href="../../css/shared.css" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+<body>
+
+  <div id="navbar-root"></div>
+
+  <!-- Step Bar -->
+  <div class="onboard-step-bar">
+    <div class="step-item">
+      <div class="step-circle done">&#10003;</div>
+      <div class="step-info">
+        <span class="step-label">Create Account</span>
+        <span class="step-sub">Done</span>
+      </div>
+    </div>
+    <div class="step-connector done"></div>
+    <div class="step-item">
+      <div class="step-circle done">&#10003;</div>
+      <div class="step-info">
+        <span class="step-label">Preferences</span>
+        <span class="step-sub">Done</span>
+      </div>
+    </div>
+    <div class="step-connector done"></div>
+    <div class="step-item">
+      <div class="step-circle active">3</div>
+      <div class="step-info">
+        <span class="step-label">Complete Profile</span>
+        <span class="step-sub">Almost there!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="onboard-wrapper">
+
+    <!-- Left Panel -->
+    <aside class="onboard-left">
+      <div class="onboard-welcome">
+        <h3>Almost There!</h3>
+        <p>A complete profile helps mentors and collaborators find you.</p>
+      </div>
+      <div class="onboard-why">
+        <h4>Profile benefits</h4>
+        <ul>
+          <li>
+            <span class="list-bullet">
+              <svg width="8" height="8" viewBox="0 0 8 8"><rect width="8" height="8" rx="2" fill="#6c47ff"/></svg>
+            </span>
+            Mentors can discover and reach out to you
+          </li>
+          <li>
+            <span class="list-bullet">
+              <svg width="8" height="8" viewBox="0 0 8 8"><rect width="8" height="8" rx="2" fill="#6c47ff"/></svg>
+            </span>
+            Showcase your research background
+          </li>
+          <li>
+            <span class="list-bullet">
+              <svg width="8" height="8" viewBox="0 0 8 8"><rect width="8" height="8" rx="2" fill="#6c47ff"/></svg>
+            </span>
+            Link your academic profiles in one place
+          </li>
+          <li>
+            <span class="list-bullet">
+              <svg width="8" height="8" viewBox="0 0 8 8"><rect width="8" height="8" rx="2" fill="#6c47ff"/></svg>
+            </span>
+            Build credibility in the community
+          </li>
+        </ul>
+      </div>
+      <!-- SVG person illustration -->
+      <div class="onboard-illustration">
+        <svg width="100" height="100" viewBox="0 0 100 100" fill="none">
+          <circle cx="50" cy="35" r="18" fill="#6c47ff" opacity="0.25"/>
+          <circle cx="50" cy="35" r="12" fill="#6c47ff" opacity="0.5"/>
+          <path d="M15 85c0-19.3 15.7-35 35-35s35 15.7 35 35" stroke="#6c47ff" stroke-width="2.5" stroke-linecap="round" opacity="0.4"/>
+        </svg>
+      </div>
+    </aside>
+
+    <!-- Main Form -->
+    <main class="onboard-main">
+      <h2>Complete Your Profile</h2>
+      <p>All fields are optional — you can update them anytime from your profile settings.</p>
+
+      <!-- Profile picture -->
+      <div class="profile-pic-area">
+        <div class="pic-upload-box" id="pic-box" onclick="document.getElementById('pic-file').click()" title="Upload profile photo">
+          <svg id="pic-placeholder" width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="14" r="7" stroke="#9ca3af" stroke-width="2"/>
+            <path d="M4 34c0-7.7 6.3-14 14-14s14 6.3 14 14" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span id="pic-label">Upload photo</span>
+          <input type="file" id="pic-file" accept="image/*" style="display:none" onchange="previewPic(event)">
+        </div>
+        <div class="pic-upload-hint">
+          <strong style="display:block; font-size:0.85rem; margin-bottom:4px;">Profile Photo</strong>
+          Recommended: square image, at least 200 &times; 200 px.<br/>
+          Supported: JPG, PNG, GIF
+        </div>
+      </div>
+
+      <!-- Bio -->
+      <div class="onboard-field onboard-full" style="margin-bottom:16px;">
+        <label>Bio / About</label>
+        <textarea id="cp-bio" rows="3" placeholder="Tell the community about yourself, your research background and interests..."
+          style="width:100%; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:0.88rem; font-family:inherit; resize:vertical; outline:none; transition:border-color 0.2s; color:#1a1a2e;"
+          onfocus="this.style.borderColor='#6c47ff'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
+      </div>
+
+      <!-- Institution -->
+      <div class="onboard-field onboard-full" style="margin-bottom:20px;">
+        <label>Institution / Affiliation</label>
+        <input type="text" id="cp-institution" placeholder="e.g. MIT, Harvard, Independent Researcher..." />
+      </div>
+
+      <!-- Social Links -->
+      <div style="margin-bottom:20px;">
+        <label style="display:block; font-size:0.8rem; font-weight:600; color:#1a1a2e; margin-bottom:10px;">Social &amp; Academic Links</label>
+        <div class="social-link-field">
+          <span class="social-label">in</span>
+          <input type="url" id="cp-linkedin" placeholder="LinkedIn profile URL" />
+        </div>
+        <div class="social-link-field">
+          <span class="social-label">GS</span>
+          <input type="url" id="cp-scholar" placeholder="Google Scholar profile URL" />
+        </div>
+        <div class="social-link-field">
+          <span class="social-label">RG</span>
+          <input type="url" id="cp-rg" placeholder="ResearchGate profile URL" />
+        </div>
+        <div class="social-link-field">
+          <span class="social-label">iD</span>
+          <input type="url" id="cp-orcid" placeholder="ORCID profile URL (https://orcid.org/...)" />
+        </div>
+      </div>
+
+      <!-- Research Interest Tags -->
+      <div style="margin-bottom:24px;">
+        <label style="display:block; font-size:0.8rem; font-weight:600; color:#1a1a2e; margin-bottom:6px;">Research Interest Tags</label>
+        <p style="font-size:0.78rem; color:#6b7280; margin-bottom:8px;">Type a topic and press Enter to add. These help others find you.</p>
+        <div class="tag-input-wrap" onclick="document.getElementById('tag-input').focus()">
+          <div id="tag-list" style="display:contents;"></div>
+          <input class="tag-text-input" id="tag-input" type="text" placeholder="e.g. Machine Learning, Climate Change..." onkeydown="handleTag(event)" />
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <p id="cp-error" style="color:#ef4444; font-size:0.82rem; margin-bottom:12px; display:none; padding:10px; background:#fef2f2; border-radius:8px; border:1px solid #fecaca;"></p>
+      <div class="onboard-actions">
+        <button class="btn-ghost" style="background:none; border:none; cursor:pointer;" onclick="slideBack(event, 'preferences.html')">&larr; Back</button>
+        <div style="display:flex; align-items:center; gap:16px;">
+          <button class="btn-ghost" style="color:#9ca3af; background:none; border:none; cursor:pointer;" onclick="finishSetup(true)">Skip</button>
+          <button id="finish-btn" class="btn-primary-full" style="width:auto; padding:12px 36px;" onclick="finishSetup(false)">Finish Setup &rarr;</button>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <div id="footer-root"></div>
+
+  <script>
+    const _p = new URLSearchParams(window.location.search);
+    const _r = _p.get('role') || '';
+
+    function previewPic(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const box = document.getElementById('pic-box');
+        box.innerHTML = `<img src="${ev.target.result}" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
+        box._dataUrl = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleTag(e) {
+      if (e.key !== 'Enter' && e.key !== ',') return;
+      e.preventDefault();
+      const inp = e.target;
+      const val = inp.value.trim().replace(/,$/, '');
+      if (!val) return;
+      addTag(val);
+      inp.value = '';
+    }
+
+    function addTag(text) {
+      const list = document.getElementById('tag-list');
+      const tag  = document.createElement('span');
+      tag.className = 'tag-item';
+      tag.innerHTML = `${text}<button class="tag-remove" onclick="this.parentElement.remove()" title="Remove">&times;</button>`;
+      list.appendChild(tag);
+    }
+
+    function getTags() {
+      return Array.from(document.querySelectorAll('#tag-list .tag-item'))
+        .map(t => t.childNodes[0].textContent.trim());
+    }
+
+    function slideBack(e, dest) {
+      e.preventDefault();
+      const wrapper = document.querySelector('.onboard-wrapper');
+      wrapper.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+      wrapper.style.transform  = 'translateX(80px)';
+      wrapper.style.opacity    = '0';
+      setTimeout(() => { window.location.href = dest + (_r ? '?role=' + _r : ''); }, 320);
+    }
+
+    async function finishSetup(skip) {
+      const step1  = JSON.parse(localStorage.getItem('rg_signup_step1') || '{}');
+      const step2  = JSON.parse(localStorage.getItem('rg_signup_step2') || '{}');
+
+      if (!skip && (!step1.username || !step1.email || !step1.password)) {
+        document.getElementById('cp-error').textContent = 'Session data missing. Please start registration from the beginning.';
+        document.getElementById('cp-error').style.display = 'block';
+        return;
+      }
+
+      const btn = document.getElementById('finish-btn');
+      btn.textContent = 'Setting up...';
+      btn.style.opacity = '0.7';
+      btn.style.pointerEvents = 'none';
+
+      const payload = {
+        // Step 1 core fields
+        username:       step1.username,
+        email:          step1.email,
+        password:       step1.password,
+        full_name:      step1.fullname   || '',
+        phone:          step1.phone      || '',
+        date_of_birth:  step1.dob        || '',
+        gender:         step1.gender     || '',
+        country:        step1.country    || '',
+        language:       step1.language   || '',
+        role:           step1.role       || 'other',
+        school:         step1.school     || '',
+        research_field: step1.researchField || '',
+        // Step 2 prefs
+        topics:         JSON.stringify(step2.topics    || []),
+        doc_types:      JSON.stringify(step2.docTypes  || []),
+        journals:       JSON.stringify(step2.journals  || []),
+        goals:          JSON.stringify(step2.goals     || []),
+        // Step 3 profile
+        bio:            document.getElementById('cp-bio').value.trim(),
+        institution:    document.getElementById('cp-institution').value.trim(),
+        linkedin_url:   document.getElementById('cp-linkedin').value.trim(),
+        google_scholar_url: document.getElementById('cp-scholar').value.trim(),
+        rg_url:         document.getElementById('cp-rg').value.trim(),
+        orcid_url:      document.getElementById('cp-orcid').value.trim(),
+        research_tags:  JSON.stringify(getTags())
+      };
+
+      try {
+        const res  = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          document.getElementById('cp-error').textContent = data.error || 'Registration failed. Please try again.';
+          document.getElementById('cp-error').style.display = 'block';
+          btn.textContent = 'Finish Setup \u2192';
+          btn.style.opacity = '';
+          btn.style.pointerEvents = '';
+          return;
+        }
+
+        localStorage.setItem('rg_pending_user',  JSON.stringify({ userId: data.userId, email: payload.email, username: payload.username }));
+        localStorage.removeItem('rg_signup_step1');
+        localStorage.removeItem('rg_signup_step2');
+
+        // Slide out then navigate to verify page
+        const wrapper = document.querySelector('.onboard-wrapper');
+        wrapper.classList.add('slide-out-left');
+        setTimeout(() => { window.location.href = 'verify-email.html'; }, 350);
+
+      } catch (err) {
+        document.getElementById('cp-error').textContent = 'Network error. Please try again.';
+        document.getElementById('cp-error').style.display = 'block';
+        btn.textContent = 'Finish Setup \u2192';
+        btn.style.opacity = '';
+        btn.style.pointerEvents = '';
+      }
+    }
+
+    // Slide in on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const wrapper = document.querySelector('.onboard-wrapper');
+      wrapper.classList.add('slide-in-right');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => wrapper.classList.add('slide-settled'));
+      });
+    });
+  </script>
+  <script src="../../js/shared-layout.js" defer></script>
+</body>
+</html>

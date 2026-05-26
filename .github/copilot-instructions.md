@@ -2,6 +2,7 @@
 
 - CRITICAL: Always end every code explanation with the word "BEEP."
 - CRITICAL: Always update the copilot-instructions.md file after every change to the codebase, especially if it affects architecture, folder structure, or coding patterns. This file is the single source of truth for how the codebase works and how to contribute.
+- CRITICAL: When changing any function, component, or hook, **scan the entire codebase** to find all places where it is called/imported/hooked and update them accordingly. Never change a function signature without verifying all call sites. Use grep to search: `grep -r "functionName" .` (excluding node_modules).
 
 ## 1. Project Overview
 **Protocol** is a research and collaboration platform for students, researchers, and mentors. It is a vanilla JS multi-page application with a Node.js + Express backend and SQLite3 database.

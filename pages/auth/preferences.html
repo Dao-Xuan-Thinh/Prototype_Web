@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preferences — ResearchGate</title>
+  <link rel="stylesheet" href="../../css/shared.css" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+<body>
+
+  <div id="navbar-root"></div>
+
+  <!-- Step Bar -->
+  <div class="onboard-step-bar">
+    <div class="step-item">
+      <div class="step-circle done">&#10003;</div>
+      <div class="step-info">
+        <span class="step-label">Create Account</span>
+        <span class="step-sub">Done</span>
+      </div>
+    </div>
+    <div class="step-connector done"></div>
+    <div class="step-item">
+      <div class="step-circle active">2</div>
+      <div class="step-info">
+        <span class="step-label">Preferences</span>
+        <span class="step-sub">Select your interests.</span>
+      </div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item">
+      <div class="step-circle">3</div>
+      <div class="step-info">
+        <span class="step-label">Complete Profile</span>
+        <span class="step-sub">Provide your detailed info.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="onboard-wrapper">
+
+    <!-- Left Panel -->
+    <aside class="onboard-left">
+      <div class="onboard-welcome">
+        <h3>Personalise Your Experience</h3>
+        <p>Help us match you with the right content and mentors.</p>
+      </div>
+      <div class="onboard-why">
+        <h4>Why personalise?</h4>
+        <ul>
+          <li>
+            <span class="list-bullet">
+              <svg width="8" height="8" viewBox="0 0 8 8"><rect width="8" height="8" rx="2" fill="#6c47ff"/></svg>
+            </span>
+            Get recommended papers in your field
+          </li>
+          <li>
+            <span class="list-bullet">
+              <svg width="8" height="8" viewBox="0 0 8 8"><rect width="8" height="8" rx="2" fill="#6c47ff"/></svg>
+            </span>
+            Find mentors aligned with your goals
+          </li>
+          <li>
+            <span class="list-bullet">
+              <svg width="8" height="8" viewBox="0 0 8 8"><rect width="8" height="8" rx="2" fill="#6c47ff"/></svg>
+            </span>
+            Discover relevant journals and conferences
+          </li>
+          <li>
+            <span class="list-bullet">
+              <svg width="8" height="8" viewBox="0 0 8 8"><rect width="8" height="8" rx="2" fill="#6c47ff"/></svg>
+            </span>
+            Tailor the platform to your workflow
+          </li>
+        </ul>
+      </div>
+      <!-- SVG network illustration -->
+      <div class="onboard-illustration">
+        <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
+          <circle cx="60" cy="45" r="10" fill="#6c47ff" opacity="0.7"/>
+          <circle cx="20" cy="20" r="7"  fill="#6c47ff" opacity="0.4"/>
+          <circle cx="100" cy="20" r="7" fill="#6c47ff" opacity="0.4"/>
+          <circle cx="20" cy="70" r="7"  fill="#6c47ff" opacity="0.4"/>
+          <circle cx="100" cy="70" r="7" fill="#6c47ff" opacity="0.4"/>
+          <line x1="60" y1="45" x2="20"  y2="20"  stroke="#6c47ff" stroke-width="1.5" opacity="0.3"/>
+          <line x1="60" y1="45" x2="100" y2="20"  stroke="#6c47ff" stroke-width="1.5" opacity="0.3"/>
+          <line x1="60" y1="45" x2="20"  y2="70"  stroke="#6c47ff" stroke-width="1.5" opacity="0.3"/>
+          <line x1="60" y1="45" x2="100" y2="70"  stroke="#6c47ff" stroke-width="1.5" opacity="0.3"/>
+        </svg>
+      </div>
+    </aside>
+
+    <!-- Main Form -->
+    <main class="onboard-main">
+      <h2>Set Your Preferences</h2>
+      <p>Select all that apply — you can always update these later in Settings.</p>
+
+      <!-- 1. Research Topics -->
+      <div class="pref-section-label">Research Topics</div>
+      <div class="pref-section-sub">Select topics you are interested in or work on.</div>
+      <div class="chip-group" id="topics">
+        <div class="chip" onclick="toggleChip(this)">Marketing</div>
+        <div class="chip" onclick="toggleChip(this)">Management</div>
+        <div class="chip" onclick="toggleChip(this)">Finance</div>
+        <div class="chip" onclick="toggleChip(this)">Psychology</div>
+        <div class="chip" onclick="toggleChip(this)">Social Science</div>
+        <div class="chip" onclick="toggleChip(this)">Environment</div>
+        <div class="chip" onclick="toggleChip(this)">Technology</div>
+        <div class="chip" onclick="toggleChip(this)">Education</div>
+        <div class="chip" onclick="toggleChip(this)">Medical &amp; Health</div>
+        <div class="chip" onclick="toggleChip(this)">Sociology</div>
+        <div class="chip" onclick="toggleChip(this)">Law &amp; Policy</div>
+        <div class="chip" onclick="toggleChip(this)">Economics</div>
+        <div class="chip" onclick="toggleChip(this)">Engineering</div>
+        <div class="chip" onclick="toggleChip(this)">Humanities</div>
+        <div class="chip" onclick="toggleChip(this)">Data Science</div>
+        <div class="chip" onclick="toggleChip(this)">Other</div>
+      </div>
+
+      <!-- 2. Document Types -->
+      <div class="pref-section-label">Document Types</div>
+      <div class="pref-section-sub">What kinds of documents do you mainly work with?</div>
+      <div class="chip-group" id="doctypes">
+        <div class="chip" onclick="toggleChip(this)">Academic Paper</div>
+        <div class="chip" onclick="toggleChip(this)">Thesis</div>
+        <div class="chip" onclick="toggleChip(this)">Books</div>
+        <div class="chip" onclick="toggleChip(this)">Business Report</div>
+        <div class="chip" onclick="toggleChip(this)">Case Study</div>
+        <div class="chip" onclick="toggleChip(this)">Conference Paper</div>
+        <div class="chip" onclick="toggleChip(this)">News</div>
+        <div class="chip" onclick="toggleChip(this)">Other</div>
+      </div>
+
+      <!-- 3. Preferred Journals -->
+      <div class="pref-section-label">Preferred Journals</div>
+      <div class="pref-section-sub">Which journals or publishers do you follow?</div>
+      <div class="chip-group" id="journals">
+        <div class="chip" onclick="toggleChip(this)">Science</div>
+        <div class="chip" onclick="toggleChip(this)">Nature</div>
+        <div class="chip" onclick="toggleChip(this)">Harvard Business Review</div>
+        <div class="chip" onclick="toggleChip(this)">Elsevier</div>
+        <div class="chip" onclick="toggleChip(this)">IEEE Xplore</div>
+        <div class="chip" onclick="toggleChip(this)">JSTOR</div>
+        <div class="chip" onclick="toggleChip(this)">Springer</div>
+        <div class="chip" onclick="toggleChip(this)">Wiley</div>
+        <div class="chip" onclick="toggleChip(this)">SSRN</div>
+        <div class="chip" onclick="toggleChip(this)">arXiv</div>
+      </div>
+
+      <!-- 4. Goals -->
+      <div class="pref-section-label">Research Goals</div>
+      <div class="pref-section-sub">What are you mainly here to do?</div>
+      <div class="chip-group" id="goals">
+        <div class="chip" onclick="toggleChip(this)">Write thesis</div>
+        <div class="chip" onclick="toggleChip(this)">Publish research</div>
+        <div class="chip" onclick="toggleChip(this)">Personal research</div>
+        <div class="chip" onclick="toggleChip(this)">Study &amp; upskill</div>
+        <div class="chip" onclick="toggleChip(this)">Find references</div>
+        <div class="chip" onclick="toggleChip(this)">Find a mentor</div>
+        <div class="chip" onclick="toggleChip(this)">Collaborate with others</div>
+        <div class="chip" onclick="toggleChip(this)">Other</div>
+      </div>
+
+      <!-- Newsletter toggle -->
+      <div class="toggle-row">
+        <div class="toggle-row-text">
+          <strong>Research Digest Newsletter</strong>
+          <span>Weekly curated papers and news in your chosen topics.</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- Actions -->
+      <div class="onboard-actions" style="margin-top:28px;">
+        <a href="onboarding.html" class="btn-ghost" onclick="slideBack(event, 'onboarding.html')">&larr; Back</a>
+        <div style="display:flex; align-items:center; gap:16px;">
+          <button id="skip-prefs" class="btn-ghost" style="color:#9ca3af; background:none; border:none; cursor:pointer;" onclick="handleSkip()">Skip this step</button>
+          <button id="continue-btn" class="btn-primary-full" style="width:auto; padding:12px 36px;" onclick="handleContinue()">Continue &rarr;</button>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <div id="footer-root"></div>
+
+  <script>
+    function toggleChip(el) { el.classList.toggle('selected'); }
+
+    const _p = new URLSearchParams(window.location.search);
+    const _r = _p.get('role') || '';
+
+    function getChips(groupId) {
+      return Array.from(document.querySelectorAll('#' + groupId + ' .chip.selected'))
+        .map(c => c.textContent.trim());
+    }
+
+    function saveAndNavigate(dest) {
+      const prefs = {
+        topics:    getChips('topics'),
+        docTypes:  getChips('doctypes'),
+        journals:  getChips('journals'),
+        goals:     getChips('goals'),
+        newsletter: document.querySelector('.toggle-switch input[type=checkbox]').checked
+      };
+      localStorage.setItem('rg_signup_step2', JSON.stringify(prefs));
+      const target = dest + (_r ? '?role=' + _r : '');
+      const wrapper = document.querySelector('.onboard-wrapper');
+      wrapper.classList.add('slide-out-left');
+      setTimeout(() => { window.location.href = target; }, 350);
+    }
+
+    function handleContinue() { saveAndNavigate('complete-profile.html'); }
+    function handleSkip()     { saveAndNavigate('complete-profile.html'); }
+
+    function slideBack(e, dest) {
+      e.preventDefault();
+      const wrapper = document.querySelector('.onboard-wrapper');
+      wrapper.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+      wrapper.style.transform  = 'translateX(80px)';
+      wrapper.style.opacity    = '0';
+      setTimeout(() => { window.location.href = dest + (_r ? '?role=' + _r : ''); }, 320);
+    }
+
+    // Slide in on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const wrapper = document.querySelector('.onboard-wrapper');
+      wrapper.classList.add('slide-in-right');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => wrapper.classList.add('slide-settled'));
+      });
+    });
+  </script>
+  <script src="../../js/shared-layout.js" defer></script>
+</body>
+</html>
