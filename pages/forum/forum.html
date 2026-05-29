@@ -1,146 +1,184 @@
-<!DOCTYPE html>
-<html lang="vi">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Diễn đàn cộng đồng</title>
-  <link rel="stylesheet" href="../../css/style.css">
-  <link rel="stylesheet" href="forum.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forum — ResearchGate</title>
+  <link rel="stylesheet" href="../dashboard/dashboard.css" />
+  <link rel="stylesheet" href="forum.css" />
 </head>
-<body>
-  <div id="site-nav"></div>
+<body data-active-page="forum">
 
-  <div class="search-top-bar">
-    <div class="search-container">
-      <input type="text" id="searchInput" class="forum-input search-input" placeholder="Tìm kiếm gợi ý (ví dụ: AI, Marketing...)" oninput="renderPosts()">
-      <button class="forum-btn primary create-btn" onclick="openCreateModal()"> Tạo bài</button>
+  <div id="db-shell-sidebar"></div>
+
+  <div class="db-main-wrapper">
+    <div id="db-shell-topbar"></div>
+
+    <div class="db-body" style="padding: 0; overflow-y: auto;">
+
+      <!-- Search + Create -->
+      <div class="search-top-bar">
+        <div class="search-container">
+          <input type="text" id="searchInput" class="forum-input search-input" placeholder="Search discussions (e.g. AI, Marketing...)" oninput="renderPosts()">
+          <button class="forum-btn primary create-btn" onclick="openCreateModal()">New Post</button>
+        </div>
+      </div>
+
+      <!-- Forum layout: feed + forum sidebar -->
+      <main class="forum-layout">
+
+        <div class="feed-column">
+
+          <div class="filter-bar" id="filterBar">
+            <div id="filterTagsContainer" class="flex-row gap-8 wrap"></div>
+            <div class="flex-row gap-8">
+              <select id="sortMode" class="forum-input small-input" onchange="renderPosts()">
+                <option value="recent_interact">By interactions</option>
+                <option value="date_desc">By date</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="postsContainer" class="flex-col gap-16 mt-8"></div>
+
+          <div id="threadContainer" style="display: none;">
+            <button class="forum-btn outline small" style="margin-bottom: 16px;" onclick="closeThread()">&larr; Back to feed</button>
+            <div id="threadContent"></div>
+
+            <div class="thread-comments-section mt-8">
+              <h4 style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--clr-border);">Comments</h4>
+              <div id="threadCommentsList" class="flex-col gap-16"></div>
+
+              <div class="mt-8" style="border-top: 1px solid var(--clr-border); padding-top: 16px;">
+                <div id="replyIndicator" class="reply-indicator">
+                  <span>Replying to: <strong id="replyingToName"></strong></span>
+                  <button class="cancel-reply-btn" onclick="cancelReply()">&#x2715;</button>
+                </div>
+                <div class="comment-input-area" style="border-top: none; padding-top: 0;">
+                  <input type="text" id="commentInput" class="forum-input flex-1" placeholder="Write a comment (Enter to send)..." onkeypress="handleCommentEnter(event)">
+                  <button class="forum-btn primary" onclick="submitComment()">Send</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /feed-column -->
+
+        <!-- Forum sidebar (profile widget + trending + polls) -->
+        <div class="sidebar-column">
+          <div class="forum-box profile-widget" style="text-align: center; background: var(--clr-surface); border: 1px solid var(--clr-border); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <img id="sysAvatarPreview" src="" alt="Avatar" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid var(--clr-border);">
+            <h3 id="sysUserName" style="margin-bottom: 4px; font-size: 1.1rem;">User</h3>
+            <div id="premiumStatusText" style="font-size: 0.85rem; color: var(--clr-muted); margin-bottom: 12px;">Free account</div>
+            <div class="flex-row gap-8" style="justify-content: center;">
+              <a href="../buy/buy.html" id="buyPremiumBtn" class="forum-btn small premium" style="text-decoration: none; display: inline-block;">Go Premium</a>
+            </div>
+          </div>
+
+          <div class="widget-box">
+            <div class="widget-header">
+              <h4>Featured Discussions</h4>
+              <span class="view-all" onclick="filterOnly('post')">See all</span>
+            </div>
+            <div id="trendingPostsWidget" class="widget-content"></div>
+          </div>
+
+          <div class="widget-box">
+            <div class="widget-header">
+              <h4>Active Polls</h4>
+              <span class="view-all" onclick="filterOnly('poll')">See all</span>
+            </div>
+            <div id="activePollsWidget" class="widget-content"></div>
+          </div>
+        </div><!-- /sidebar-column -->
+
+      </main>
     </div>
   </div>
 
-  <main class="forum-layout">
-    <div class="feed-column">
-      
-      <div class="filter-bar" id="filterBar">
-        <div id="filterTagsContainer" class="flex-row gap-8 wrap"></div>
-        <div class="flex-row gap-8">
-          <select id="sortMode" class="forum-input small-input" onchange="renderPosts()">
-            <option value="recent_interact"> Theo lượt tương tác</option>
-            <option value="date_desc"> Theo thời gian </option>
-          </select>
-        </div>
-      </div>
-
-      <div id="postsContainer" class="flex-col gap-16 mt-8"></div>
-
-      <div id="threadContainer" style="display: none;">
-        <button class="forum-btn outline small" style="margin-bottom: 16px;" onclick="closeThread()">← Quay lại bảng tin</button>
-        <div id="threadContent"></div>
-        
-        <div class="thread-comments-section mt-8">
-          <h4 style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--clr-border);">Bình luận</h4>
-          <div id="threadCommentsList" class="flex-col gap-16"></div>
-          
-          <div class="mt-8" style="border-top: 1px solid var(--clr-border); padding-top: 16px;">
-            <div id="replyIndicator" class="reply-indicator">
-              <span>Đang trả lời: <strong id="replyingToName"></strong></span>
-              <button class="cancel-reply-btn" onclick="cancelReply()">✕</button>
-            </div>
-            
-            <div class="comment-input-area" style="border-top: none; padding-top: 0;">
-              <input type="text" id="commentInput" class="forum-input flex-1" placeholder="Viết bình luận của bạn (Enter để gửi)..." onkeypress="handleCommentEnter(event)">
-              <button class="forum-btn primary" onclick="submitComment()">Gửi</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="sidebar-column">
-      <div class="forum-box profile-widget" style="text-align: center; background: var(--clr-surface); border: 1px solid var(--clr-border); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-        <img id="sysAvatarPreview" src="" alt="Avatar" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid var(--clr-border);">
-        <h3 id="sysUserName" style="margin-bottom: 4px; font-size: 1.1rem; cursor: pointer;" onclick="changeUserName()" title="Bấm để đổi tên">Người dùng</h3>
-        <div id="premiumStatusText" style="font-size: 0.85rem; color: var(--clr-muted); margin-bottom: 12px;">Tài khoản thường</div>
-        
-        <div class="flex-row gap-8" style="justify-content: center;">
-          <label class="forum-btn outline small" style="cursor: pointer; padding: 6px 12px; font-size: 0.8rem;">
-            📷 Đổi Avatar
-            <input type="file" style="display: none;" accept="image/*" onchange="updateSystemAvatar(event)">
-          </label>
-          <button id="buyPremiumBtn" class="forum-btn small premium" onclick="buyPremium()">⭐ Nâng cấp</button>
-        </div>
-      </div>
-
-      <div class="widget-box">
-        <div class="widget-header">
-          <h4>Thảo luận nổi bật</h4>
-          <span class="view-all" onclick="filterOnly('post')">Xem tất cả</span>
-        </div>
-        <div id="trendingPostsWidget" class="widget-content"></div>
-      </div>
-
-      <div class="widget-box">
-        <div class="widget-header">
-          <h4>Khảo sát đang diễn ra</h4>
-          <span class="view-all" onclick="filterOnly('poll')">Xem tất cả</span>
-        </div>
-        <div id="activePollsWidget" class="widget-content"></div>
-      </div>
-    </div>
-  </main>
-
+  <!-- Create Post Modal -->
   <div id="createPostModal" class="modal-overlay" onclick="closeCreateModal(event)">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Tạo Bài Đăng / Khảo Sát</h3>
-        <button class="close-btn" onclick="closeCreateModal(true)">✕</button>
+        <h3>Create Post / Poll</h3>
+        <button class="close-btn" onclick="closeCreateModal(true)">&#x2715;</button>
       </div>
-      
+
       <div class="flex-row gap-8 mt-8" id="premiumColorPickerSection" style="display: none; align-items: center; background: #fefce8; padding: 10px; border-radius: 8px;">
-        <label style="font-size: 0.85rem; font-weight: 600; color: #854d0e;"> Màu tên (Premium):</label>
+        <label style="font-size: 0.85rem; font-weight: 600; color: #854d0e;">Name Color (Premium):</label>
         <input type="color" id="postNameColor" value="#3a6cf4" style="cursor: pointer; border: none; padding:0; width:28px; height:28px; border-radius: 4px;">
       </div>
 
-      <input type="text" id="postTitle" class="forum-input w-100 mt-8" placeholder="Tiêu đề bài đăng" style="font-size: 1.1rem; font-weight: 600;">
-      <textarea id="postContent" class="forum-input w-100 mt-8" placeholder="Nội dung chi tiết..." rows="4"></textarea>
-      
+      <input type="text" id="postTitle" class="forum-input w-100 mt-8" placeholder="Post title" style="font-size: 1.1rem; font-weight: 600;">
+      <textarea id="postContent" class="forum-input w-100 mt-8" placeholder="Detailed content..." rows="4"></textarea>
+
       <div class="mt-8" style="padding: 12px; border: 1px dashed var(--clr-border); border-radius: 8px; background: #f8fafc; color: #1c1e24;">
-        <strong style="font-size: 0.85rem; display: block; margin-bottom: 6px;">📎 Đính kèm File (Ảnh, Tài liệu...):</strong>
+        <strong style="font-size: 0.85rem; display: block; margin-bottom: 6px;">[Attach] File (Images, Documents...):</strong>
         <input type="file" id="postFile" style="font-size: 0.85rem;" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt">
       </div>
 
       <div class="flex-row gap-8 wrap mt-8">
         <select id="postType" class="forum-input" onchange="togglePollUI()">
-          <option value="post">Thảo luận</option>
-          <option value="poll">Khảo sát</option>
+          <option value="post">Discussion</option>
+          <option value="poll">Poll</option>
         </select>
         <select id="postPrivacy" class="forum-input">
-          <option value="public">Công khai</option>
-          <option value="locked"> Khóa bài (Premium)</option>
+          <option value="public">Public</option>
+          <option value="locked">Locked (Premium)</option>
         </select>
       </div>
 
       <div id="pollUI" class="poll-setup-box mt-8" style="display: none;">
         <div id="pollInputsContainer" class="flex-col gap-8">
-          <input type="text" class="forum-input poll-option-input" placeholder="Lựa chọn 1">
-          <input type="text" class="forum-input poll-option-input" placeholder="Lựa chọn 2">
+          <input type="text" class="forum-input poll-option-input" placeholder="Option 1">
+          <input type="text" class="forum-input poll-option-input" placeholder="Option 2">
         </div>
-        <button class="forum-btn outline small mt-8" onclick="addPollInput()">+ Thêm lựa chọn</button>
+        <button class="forum-btn outline small mt-8" onclick="addPollInput()">+ Add option</button>
       </div>
-      
+
       <div class="mt-8">
         <strong style="font-size: 0.85rem;">Tags:</strong>
         <div id="postTagsContainer" class="flex-row gap-8 wrap mt-8"></div>
       </div>
 
       <div style="text-align: right; margin-top: 24px;">
-        <button class="forum-btn primary" onclick="createPost()">Đăng bài</button>
+        <button class="forum-btn primary" onclick="createPost()">Post</button>
       </div>
     </div>
   </div>
 
-  <script src="../../js/config.js"></script>
-  <script src="../../js/auth.js"></script>
-  <script src="../../js/nav.js"></script>
-  <script src="forum.js"></script>
+  <script>
+    // Auth compat shim for forum.js
+    window.AppConfig = { API: '/api' };
+    window.Auth = {
+      getToken: function() {
+        return localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token');
+      },
+      getUser: function() {
+        try {
+          const raw = localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user');
+          return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+      }
+    };
+  </script>
+  <script src="../../js/dashboard-shell.js" defer></script>
+  <script src="forum.js" defer></script>
+  <script>
+    // 5-second real-time polling for posts (no white blink — updates in-place via forum.js renderPosts)
+    document.addEventListener('DOMContentLoaded', function () {
+      let pollTimer = null;
+      function schedulePoll() {
+        pollTimer = setInterval(async function () {
+          if (typeof fetchPosts === 'function' && typeof renderPosts === 'function') {
+            await fetchPosts();
+            renderPosts();
+          }
+        }, 5000);
+      }
+      // Wait for forum.js to init
+      setTimeout(schedulePoll, 2000);
+    });
+  </script>
 </body>
 </html>

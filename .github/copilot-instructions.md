@@ -1,13 +1,13 @@
-# Copilot Instructions for Protocol
+# Copilot Instructions for ResearchGate
 
 - CRITICAL: Always end every code explanation with the word "BEEP."
 - CRITICAL: Always update the copilot-instructions.md file after every change to the codebase, especially if it affects architecture, folder structure, or coding patterns. This file is the single source of truth for how the codebase works and how to contribute.
 - CRITICAL: When changing any function, component, or hook, **scan the entire codebase** to find all places where it is called/imported/hooked and update them accordingly. Never change a function signature without verifying all call sites. Use grep to search: `grep -r "functionName" .` (excluding node_modules).
 
 ## 1. Project Overview
-**Protocol** is a research and collaboration platform for students, researchers, and mentors. It is a vanilla JS multi-page application with a Node.js + Express backend and SQLite3 database.
+**ResearchGate** (branded "Research**Gate**" — "Gate" in purple) is a research and collaboration platform for students, researchers, and mentors. It is a vanilla JS multi-page application with a Node.js + Express backend and SQLite3 database.
 
-- **Primary features:** Document library, AI tools, forum, real-time chat (polling), user auth, premium membership
+- **Primary features:** Document library, AI tools, forum, real-time chat (polling), user auth, premium membership, dashboard
 - **Hosting:** Node.js server on port 3000, proxied to port 5000 via Tailscale Funnel; optional nginx in front
 - **Database:** `connects.db` (SQLite3)
 
@@ -20,7 +20,8 @@
 | Frontend | Plain HTML5, CSS3, Vanilla JS (no framework) |
 | Backend | Node.js 18+, Express |
 | Database | SQLite3 (`sqlite3` npm package) |
-| Auth | JWT (`jsonwebtoken`), bcrypt (`bcryptjs`) |
+| Auth | JWT (`jsonwebtoken`), bcrypt (`bcryptjs`), Google OAuth (`google-auth-library`) |
+| Email | `nodemailer` (email verification codes) |
 | File uploads | `multer` |
 | Image compression | `sharp` (80% JPEG quality, max 2000px — applied to chat & forum image uploads) |
 | Document parsing | `mammoth` (DOCX → HTML) |
@@ -42,18 +43,23 @@
 │   └── documents.css       # Document page styles
 ├── js/
 │   ├── config.js           # window.AppConfig.API — the only place to set the API base URL
-│   ├── auth.js             # window.Auth JWT helpers
+│   ├── auth.js             # window.Auth JWT helpers (used by old pages)
 │   ├── nav.js              # Shared navbar, footer, auth modals, theme dropdown, user dropdown, font loader
+│   ├── dashboard-shell.js  # Global dashboard chrome injector (sidebar + topbar) for inner pages
 │   └── documents.js        # Document page logic
 ├── pages/
 │   ├── AIs/                # ais.html, ais.css, ais.js — AI tools hub
+│   ├── auth/               # login.html, onboarding.html, preferences.html, complete-profile.html
+│   ├── buy/                # buy.html, buy.css — premium purchase page (uses dashboard shell)
 │   ├── changelog/          # changelog.html, changelog.css — project changelog (linked in footer)
 │   ├── chat/               # connects.html, navc.js, stylec.css — real-time chat
+│   ├── dashboard/          # dashboard.html, dashboard.css — main dashboard (uses dashboard shell)
 │   ├── doc/                # documents.html — document library
-│   ├── forum/              # forum.html, forum.js, forum.css — forum
+│   ├── forum/              # forum.html, forum.js, forum.css — forum (uses dashboard shell)
 │   ├── premium/            # premium.html, premium.css — upgrade page
+│   ├── profile/            # profile.html, profile.js, profile.css — user profile page (uses dashboard shell)
 │   ├── roles/              # roles.html, roles.js, roles.css — role selection/request page
-│   └── settings/           # settings.html, settings.js, settings.css — user settings page
+│   └── settings/           # settings.html, settings.js, settings.css — user settings (uses dashboard shell)
 └── uploads/                # Uploaded files (git-ignored)
     ├── avatars/
     └── chat-files/
@@ -117,18 +123,38 @@ Protocol now supports **11 themes**:
 
 ## 5. Authentication Pattern
 
-### Client Side (`js/auth.js`)
-`window.Auth` is available on every page (loaded before `nav.js`):
+### Two-tier auth: old pages vs dashboard pages
 
+**Old pages** (index, chat, doc, forum pre-TB1.5) use `js/auth.js`:
 ```js
-Auth.getToken()      // → JWT string | null
-Auth.getUser()       // → decoded JWT payload { id, username, email, tier } | null (checks expiry)
-Auth.isLoggedIn()    // → boolean
-Auth.saveToken(tok)  // saves to localStorage
-Auth.logout()        // removes token, reloads page
+window.Auth.getToken()   // reads localStorage('protocol_token')
+window.Auth.getUser()    // decodes JWT, checks expiry
+window.Auth.saveToken()
+window.Auth.logout()
 ```
 
-JWT payload: `{ id, username, email, tier }` — `tier` is `"member"` or `"premium"`.
+**Dashboard pages** (dashboard, settings, buy, forum, profile — TB1.5+) use dual-storage:
+```js
+function getToken() { return localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token'); }
+function getUser()  {
+  const raw = localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user');
+  return raw ? JSON.parse(raw) : null;
+}
+```
+- `rg_token` in localStorage = Remember Me checked
+- `rg_token` in sessionStorage only = Remember Me unchecked (cleared on tab close)
+- `rg_user` mirrors the same storage as `rg_token` and holds parsed user object
+
+**Compat shim** — dashboard pages that also run old JS files (e.g., settings.js, forum.js) inject this in a `<script>` block before the page script:
+```html
+<script>
+  window.Auth = {
+    getToken: () => localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token'),
+    getUser: () => { try { const r = localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user'); return r ? JSON.parse(r) : null; } catch { return null; } }
+  };
+  window.AppConfig = { API: '' };
+</script>
+```
 
 ### Server Side (`server.js`)
 Use `requireAuth` middleware for protected routes:
@@ -141,7 +167,7 @@ app.patch("/api/something", requireAuth, (req, res) => {
 
 ### Auth Request Headers
 ```js
-headers: { Authorization: `Bearer ${window.Auth.getToken()}` }
+headers: { Authorization: `Bearer ${getToken()}` }
 // For JSON body also add: "Content-Type": "application/json"
 // For FormData: omit Content-Type (browser sets it with boundary)
 ```
@@ -150,11 +176,13 @@ headers: { Authorization: `Bearer ${window.Auth.getToken()}` }
 
 ## 6. Adding a New Page
 
+### Option A: Classic page (uses nav.js/auth.js — for non-dashboard pages)
+
 1. Create `pages/<name>/<name>.html`
 2. Include in `<head>`:
    ```html
    <link rel="stylesheet" href="../../css/style.css" />
-   <link rel="stylesheet" href="<name>.css" />   <!-- page-specific CSS -->
+   <link rel="stylesheet" href="<name>.css" />
    ```
 3. Add nav/footer placeholders in `<body>`:
    ```html
@@ -167,9 +195,50 @@ headers: { Authorization: `Bearer ${window.Auth.getToken()}` }
    <script src="../../js/config.js"></script>
    <script src="../../js/auth.js"></script>
    <script src="../../js/nav.js"></script>
-   <script src="<name>.js"></script>   <!-- page-specific JS -->
+   <script src="<name>.js"></script>
    ```
-5. The depth-aware base path in nav.js is auto-calculated — relative links in your page JS use `../../` for pages in `pages/<name>/`.
+
+### Option B: Dashboard page (uses dashboard-shell.js — TB1.5+)
+
+1. Create `pages/<name>/<name>.html`, set `data-active-page` on body:
+   ```html
+   <body data-active-page="<name>">
+   ```
+2. Include in `<head>`:
+   ```html
+   <link rel="stylesheet" href="../../pages/dashboard/dashboard.css" />
+   <link rel="stylesheet" href="<name>.css" />
+   ```
+3. Add shell placeholders + wrapper:
+   ```html
+   <div id="db-shell-sidebar"></div>
+   <div class="db-main-wrapper">
+     <div id="db-shell-topbar"></div>
+     <div class="db-body">
+       <!-- page content here -->
+     </div>
+   </div>
+   ```
+4. If using old JS that depends on `window.Auth`, add the compat shim **before** the page script (see §5).
+5. Include scripts at bottom:
+   ```html
+   <script src="<name>.js" defer></script>
+   <script src="../../js/dashboard-shell.js" defer></script>
+   ```
+6. In `<name>.css`, add CSS variable bridge at the top:
+   ```css
+   :root {
+     --clr-bg: var(--bg, #f0f2fa);
+     --clr-surface: var(--surface, #fff);
+     --clr-border: var(--border, #e5e7ef);
+     --clr-text: var(--text-dark, #1e1b3a);
+     --clr-muted: var(--text-muted, #94a3b8);
+     --clr-primary: var(--purple, #6c47ff);
+     --radius: 10px;
+     --transition: 0.18s ease;
+   }
+   ```
+7. Add a nav item in `js/dashboard-shell.js`'s `navItem(...)` calls inside the sidebar HTML.
 
 ---
 
@@ -402,19 +471,103 @@ Called in both `POST /api/messages/file` and `POST /api/forum/posts/:id/image` a
 
 ---
 
-## 12. Server Routes Reference
+## 11.10. Dashboard Shell (`js/dashboard-shell.js`, TB1.5+)
+
+`dashboard-shell.js` is the global chrome injector for all dashboard/inner pages. It replaces `nav.js` for these pages.
+
+**What it injects:**
+- Sidebar (`<aside class="db-sidebar">`) with logo, navigation items, upgrade button
+- Topbar (`<header class="db-topbar">`) with search bar (disabled), notifications, user chip + dropdown
+- Logout confirmation modal
+
+**Auth guard:** Redirects to `login.html` if no `rg_token` in localStorage or sessionStorage.
+
+**Heartbeat:** POSTs to `/api/auth/heartbeat` every 5 seconds when logged in.
+
+**User chip dropdown:** Profile → `pages/profile/profile.html`, Settings → `pages/settings/settings.html`, Log Out → opens logout modal.
+
+**Global functions exposed:**
+- `window.dbShellLogout()` — opens the logout confirmation modal
+- `window.dbShellCancelLogout()` — closes it
+- `window.dbShellDoLogout()` — clears auth and redirects to login
+- `window.dbShellToggleDropdown(e)` — toggles user chip dropdown
+
+**CSS variables** used by dashboard pages (defined in `pages/dashboard/dashboard.css`):
+| Variable | Value |
+|---|---|
+| `--purple` | `#6c47ff` |
+| `--bg` | `#f0f2fa` |
+| `--surface` | `#fff` |
+| `--border` | `#e5e7ef` |
+| `--text-dark` | `#1e1b3a` |
+| `--text-muted` | `#94a3b8` |
+
+Dashboard pages map these to `--clr-*` via a bridge block in their CSS (see §6 Option B).
+
+---
+
+## 11.11. Real-time Heartbeat & Online Users (TB1.5)
+
+**Heartbeat:** `POST /api/auth/heartbeat` — updates `users.last_seen` and sets `users.is_online = 1`.
+- Called every 5s by `dashboard-shell.js` automatically for all dashboard pages.
+- A user is considered "offline" after 15s without a heartbeat.
+
+**Online users list:** `GET /api/users/online` — returns `[{id, username, avatar_url, role, last_seen}]` for users active within 15s.
+
+**Dashboard Active Members / Online Mentors widget:** Polls `/api/users/online` every 5s. Uses smooth DOM diffing (no full repaint) to prevent white flash.
+
+---
+
+## 11.12. Profile Page (`pages/profile/`, TB1.5)
+
+- URL: `profile.html?user=<username>` to view any user; no param = own profile
+- Fetches `GET /api/users/profile/:username` (public, no auth required)
+- Shows: avatar, username, full_name, role badge, institution, joined date, bio, research_tags, forum posts
+- Own profile: Edit Profile button → modal to update bio/institution/research_tags via `PATCH /api/auth/profile`
+- Own profile: avatar edit button → uploads via `POST /api/auth/avatar`
+- Navigated from dashboard user chip dropdown → "Profile"
+
+---
+
+## 11.13. Buy / Premium Page (`pages/buy/`, TB1.5)
+
+- Uses dashboard shell (`data-active-page="buy"`)
+- Four tiers: Free ($0), Plus ($9/mo), Pro ($19/mo), Unlimited ($39/mo)
+- All buy buttons are disabled (`buy-btn--disabled`) — not connected to payment yet
+- **Dev Premium toggle:** switch at top of page POSTs to `POST /api/auth/dev-premium` `{ enable: bool }` to toggle tier between `premium`/`free` for testing
+
+---
+
+## 11.14. Settings Page (`pages/settings/`, TB1.5 revamp)
+
+Now uses dashboard shell instead of nav.js. Compat shim provides `window.Auth` for `settings.js`.
+
+**Sections:**
+- **User**: avatar upload (`POST /api/auth/avatar`), change username (`PATCH /api/auth/username`), change password (`PATCH /api/auth/password`), logout
+- **Customization**: theme selector (stored in `localStorage.theme`)
+
+Font picker removed in TB1.5 revamp.
+
+
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | POST | `/api/auth/signup` | No | Register user |
 | POST | `/api/auth/login` | No | Login, returns JWT |
-| GET | `/api/auth/me` | Yes | Get current user (includes `created_at`) |
+| POST | `/api/auth/google` | No | Google OAuth login/register |
+| POST | `/api/auth/verify-email` | No | Verify email with code |
+| GET | `/api/auth/me` | Yes | Get current user (includes `created_at`, `avatar_url`) |
 | GET | `/api/auth/check-username/:u` | No | Check username availability |
 | PATCH | `/api/auth/username` | Yes | Change username (requires password) |
 | PATCH | `/api/auth/password` | Yes | Change password |
+| PATCH | `/api/auth/profile` | Yes | Update bio, institution, research_tags |
 | PATCH | `/api/auth/upgrade` | Yes | Upgrade to premium |
 | POST | `/api/auth/avatar` | Yes | Upload avatar (multipart) |
+| POST | `/api/auth/dev-premium` | Yes | Toggle dev premium mode (testing only) |
+| POST | `/api/auth/heartbeat` | Yes | Update last_seen + online status |
 | GET | `/api/users` | No | All users with is_online flag |
+| GET | `/api/users/online` | Yes | Only online users (last seen < 15s) |
+| GET | `/api/users/profile/:username` | No | Public profile + recent forum posts |
 | PUT | `/api/users/heartbeat` | Yes | Update last_seen |
 | GET | `/api/docs` | No | List docs (supports `?type`, `?date`, `?sort`) |
 | POST | `/api/docs/upload` | No | Upload document with optional `description` (multipart) |
@@ -430,6 +583,7 @@ Called in both `POST /api/messages/file` and `POST /api/forum/posts/:id/image` a
 | POST | `/api/forum/posts` | Yes | Create post |
 | GET | `/api/forum/posts/:id` | No | Get post + comments |
 | PUT | `/api/forum/posts/:id/vote` | Yes | Vote on post |
+| PATCH | `/api/forum/posts/:id/pin` | Yes | Pin/unpin post (author or admin/mod) |
 | POST | `/api/forum/posts/:id/image` | Yes | Upload image attachment (auto-compressed via sharp) |
 | POST | `/api/forum/posts/:id/comments` | Yes | Add comment |
 | DELETE | `/api/forum/posts/:id` | Yes | Delete post (author, admin, or mod) |

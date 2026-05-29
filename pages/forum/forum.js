@@ -1,4 +1,4 @@
-const SYSTEM_TAGS = ["Giải Đáp", "Học Thuật", "Xã Hội", "Đề Xuất"];
+﻿const SYSTEM_TAGS = ["Q&A", "Academic", "Social", "Proposal"];
 const API = window.AppConfig.API;
 const POLLS_STORAGE_KEY = 'forum_polls';
 const PIN_STORAGE_KEY = 'forum_pin_states';
@@ -13,12 +13,12 @@ function getAuthUser() {
 }
 
 function buildDefaultAvatar(name) {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Người dùng ẩn danh')}&background=5b85f6&color=fff`;
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Anonymous')}&background=6c47ff&color=fff`;
 }
 
 function getCurrentProfile() {
   const user = getAuthUser();
-  const username = user?.username || "Người dùng ẩn danh";
+  const username = user?.username || "Anonymous";
   const avatar = user?.avatar_url || localStorage.getItem(AVATAR_CACHE_KEY) || buildDefaultAvatar(username);
   return {
     user,
@@ -35,8 +35,8 @@ function parseDateValue(value) {
 
 function normalizeTags(tags) {
   let safeTags = Array.isArray(tags) ? tags : [];
-  safeTags = safeTags.filter(t => t !== "Trò Chuyện");
-  if (safeTags.length === 0) safeTags = ["Giải Đáp"];
+  safeTags = safeTags.filter(t => t !== "Chat");
+  if (safeTags.length === 0) safeTags = ["Q&A"];
   return safeTags;
 }
 
@@ -77,7 +77,7 @@ function readPollStorage() {
 }
 
 function normalizeComment(comment) {
-  const authorName = comment.author_name || comment.author || "Ẩn danh";
+  const authorName = comment.author_name || comment.author || "Anonymous";
   return {
     id: Number(comment.id) || Date.now(),
     author: authorName,
@@ -91,14 +91,14 @@ function normalizeComment(comment) {
 function normalizeLocalPollPost(post) {
   const pinStates = loadPinStates();
   const localPin = pinStates[post.id] || null;
-  const authorName = post.author || post.author_name || "Ẩn danh";
+  const authorName = post.author || post.author_name || "Anonymous";
   return {
     ...post,
     source: 'local-poll',
     id: Number(post.id) || Date.now(),
     author: authorName,
     authorAvatar: post.authorAvatar || post.author_avatar || buildDefaultAvatar(authorName),
-    title: post.title || "Không có tiêu đề",
+    title: post.title || "Untitled",
     content: post.content || "",
     upvotes: Number(post.upvotes) || 0,
     downvotes: Number(post.downvotes) || 0,
@@ -146,7 +146,7 @@ function migrateLegacyPolls() {
 }
 
 function normalizeServerPost(serverPost, existingPost = {}) {
-  const authorName = serverPost.author_name || existingPost.author || "Ẩn danh";
+  const authorName = serverPost.author_name || existingPost.author || "Anonymous";
   const pinStates = loadPinStates();
   const localPin = pinStates[serverPost.id] || null;
   const comments = Array.isArray(serverPost.comments)
@@ -178,7 +178,7 @@ function normalizeServerPost(serverPost, existingPost = {}) {
     authorColor: existingPost.authorColor || '#1c1e24',
     isPremiumAuthor: Boolean(existingPost.isPremiumAuthor),
     privacy: existingPost.privacy || 'public',
-    title: serverPost.title || existingPost.title || "Không có tiêu đề",
+    title: serverPost.title || existingPost.title || "Untitled",
     content: serverPost.content || existingPost.content || "",
     // Image: use server image_url if present, else keep local fileData
     image_url: imageUrl,
@@ -349,7 +349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const file = e.target.files[0];
       if (!file) return;
       if (file.size > 2 * 1024 * 1024) {
-        alert("File quá lớn! Vui lòng chọn file dưới 2MB.");
+        alert("File is too large! Please choose a file under 2MB.");
         this.value = ''; return;
       }
       uploadedFileName = file.name;
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await renderPosts(); 
 });
 
-// ================= HỆ THỐNG PROFILE =================
+// ================= PROFILE SYSTEM =================
 function loadSystemProfile() {
   const { user } = syncProfileFromAuth();
   const nameEl = document.getElementById('sysUserName');
@@ -376,7 +376,7 @@ function loadSystemProfile() {
 
   if (nameEl) nameEl.innerText = sysName;
   if (avatarEl) avatarEl.src = sysAvatar;
-  if (statusText) statusText.innerText = user ? 'Tài khoản thường' : 'Chưa đăng nhập';
+  if (statusText) statusText.innerText = user ? 'Free account' : 'Not logged in';
   updatePremiumUI();
 
   const token = window.Auth ? window.Auth.getToken() : null;
@@ -393,7 +393,7 @@ function loadSystemProfile() {
 }
 
 function changeUserName() {
-  alert("Tên hiển thị được quản lý bởi hệ thống tài khoản. Vui lòng cập nhật trong hồ sơ của bạn.");
+  alert("Display name is managed by the account system. Please update it in your profile.");
 }
 
 async function updateSystemAvatar(event) {
@@ -401,7 +401,7 @@ async function updateSystemAvatar(event) {
   if (!file) return;
 
   if (!getAuthUser()) {
-    promptLogin("Vui lòng đăng nhập để cập nhật avatar.");
+    promptLogin("Please log in to update your avatar.");
     event.target.value = '';
     return;
   }
@@ -421,7 +421,7 @@ async function updateSystemAvatar(event) {
       loadSystemProfile();
     }
   } catch (error) {
-    alert("Lỗi: " + error.message);
+    alert("Error: " + error.message);
   } finally {
     event.target.value = '';
   }
@@ -439,28 +439,28 @@ function updatePremiumUI() {
   if (!statusText || !btn) return;
 
   if (isPremium && user) {
-    statusText.innerHTML = "<b> Tài khoản Premium</b>";
+    statusText.innerHTML = "<b>Premium account</b>";
     statusText.style.color = "#a16207";
     btn.style.display = "none";
     if (colorPicker) colorPicker.style.display = "flex";
     return;
   }
 
-  statusText.innerHTML = user ? 'Tài khoản thường' : 'Chưa đăng nhập';
+  statusText.innerHTML = user ? 'Free account' : 'Not logged in';
   statusText.style.color = '';
   btn.style.display = user ? 'inline-flex' : 'none';
   if (colorPicker) colorPicker.style.display = 'none';
 }
 
-// ================= TẠO BÀI & TAGS =================
+// ================= CREATE POST & TAGS =================
 function initSystemTags() {
   const postTagsDiv = document.getElementById('postTagsContainer');
   const filterTagsDiv = document.getElementById('filterTagsContainer');
   if (!postTagsDiv || !filterTagsDiv) return;
 
   postTagsDiv.innerHTML = ''; 
-  // Thêm nút xem tất cả bài để dễ dàng reset bộ lọc
-  filterTagsDiv.innerHTML = `<button class="tag-btn active" id="filter-btn-all-types" onclick="filterOnly('all')" style="background: #eef1fb; border-color: var(--clr-primary); color: var(--clr-primary); font-weight: bold; margin-right: 8px;">🌐 Tất cả bài</button>`;
+  // Add all-posts button to easily reset filter
+  filterTagsDiv.innerHTML = `<button class="tag-btn active" id="filter-btn-all-types" onclick="filterOnly('all')" style="background: #eef1fb; border-color: var(--clr-primary); color: var(--clr-primary); font-weight: bold; margin-right: 8px;">🌐 All Posts</button>`;
   
   SYSTEM_TAGS.forEach(tag => {
     postTagsDiv.innerHTML += `<label style="font-size: 0.9rem; display: flex; align-items: center; gap: 6px; cursor: pointer;"><input type="checkbox" class="post-tag-checkbox" value="${tag}"> ${tag}</label>`;
@@ -469,7 +469,7 @@ function initSystemTags() {
 }
 
 function openCreateModal() {
-  if (!getAuthUser()) return promptLogin("Vui lòng đăng nhập để tạo bài đăng.");
+  if (!getAuthUser()) return promptLogin("Please log in to create a post.");
   document.getElementById('createPostModal').classList.add('active');
 }
 function closeCreateModal(force = false) {
@@ -482,27 +482,27 @@ function togglePollUI() { document.getElementById('pollUI').style.display = docu
 function addPollInput() {
   const container = document.getElementById('pollInputsContainer');
   const input = document.createElement('input');
-  input.type = 'text'; input.className = 'forum-input poll-option-input mt-8'; input.placeholder = `Lựa chọn ${container.children.length + 1}`;
+  input.type = 'text'; input.className = 'forum-input poll-option-input mt-8'; input.placeholder = `Option ${container.children.length + 1}`;
   container.appendChild(input);
 }
 
 async function createPost() {
-  if (!getAuthUser()) return promptLogin("Vui lòng đăng nhập để tạo bài đăng.");
+  if (!getAuthUser()) return promptLogin("Please log in to create a post.");
 
   const title = document.getElementById('postTitle').value.trim();
   const content = document.getElementById('postContent').value.trim();
   const type = document.getElementById('postType').value;
   const privacy = document.getElementById('postPrivacy').value;
 
-  if (!title) return alert("Vui lòng nhập tiêu đề!");
-  if (!content) return alert("Vui lòng nhập nội dung!");
+  if (!title) return alert("Please enter a title!");
+  if (!content) return alert("Please enter content!");
   const selectedTags = Array.from(document.querySelectorAll('.post-tag-checkbox:checked')).map(cb => cb.value);
-  if (selectedTags.length === 0) return alert("Bắt buộc phải chọn ít nhất 1 Tag!");
+  if (selectedTags.length === 0) return alert("You must select at least 1 tag!");
 
   let pollOptions = [];
   if (type === 'poll') {
     const inputs = Array.from(document.querySelectorAll('.poll-option-input')).map(inp => inp.value.trim()).filter(v => v);
-    if (inputs.length < 2) return alert("Khảo sát cần ít nhất 2 lựa chọn!");
+    if (inputs.length < 2) return alert("A poll needs at least 2 choices!");
     pollOptions = inputs.map((optName, index) => ({ id: index, text: optName, votes: 0 }));
   }
 
@@ -553,13 +553,13 @@ async function createPost() {
     document.querySelectorAll('.post-tag-checkbox').forEach(cb => cb.checked = false);
     
     closeCreateModal(true);
-    filterOnly('all'); // Tự động reset về tab Tất cả bài khi đăng xong
+    filterOnly('all'); // Auto-reset to All Posts tab after posting
   } catch (error) {
-    alert("Lỗi: " + error.message);
+    alert("Error: " + error.message);
   }
 }
 
-// ================= CƠ CHẾ KHẢO SÁT (POLL) =================
+// ================= POLL MECHANISM =================
 function stagePollOption(postId, optionId) {
   pendingVotes[postId] = optionId;
   if (currentOpenPostId) renderThreadView(); else renderPosts();
@@ -572,7 +572,7 @@ async function confirmPollVote(postId) {
 
   if (post.source !== 'local-poll' && post.pollId) {
     // Server poll — call API
-    if (!getAuthUser()) { promptLogin("Đăng nhập để bình chọn."); return; }
+    if (!getAuthUser()) { promptLogin("Please log in to vote."); return; }
     try {
       const result = await fetchJSON(`${API}/forum/polls/${post.pollId}/vote`, {
         method: 'POST',
@@ -586,7 +586,7 @@ async function confirmPollVote(postId) {
       post.currentUserPollVote = result.my_vote !== null && result.my_vote !== undefined ? result.my_vote : optionId;
       post.lastActive = Date.now();
     } catch (err) {
-      alert("Lỗi bình chọn: " + (err.message || "Unknown error"));
+      alert("Poll error: " + (err.message || "Unknown error"));
       return;
     }
     delete pendingVotes[postId];
@@ -621,20 +621,20 @@ function resetPollVote(postId) {
   if (currentOpenPostId) renderThreadView(); else renderPosts();
 }
 
-// ================= RENDER & BÌNH LUẬN =================
+// ================= RENDER & COMMENTS =================
 function generatePostHTML(post, isThreadView = false) {
   const isUpvoted = post.currentUserVote === 'up' ? 'active-up' : '';
   const isDownvoted = post.currentUserVote === 'down' ? 'active-down' : '';
   const badgeHTML = post.isPremiumAuthor ? `<span class="premium-badge"> Premium</span>` : '';
   
-  // Xác định quyền xem bài (Quyền khóa)
+  // Determine post view permission (lock)
   const canView = !(post.privacy === 'locked' && !isPremium && post.author !== sysName);
-  const lockHTML = post.privacy === 'locked' ? `<span style="font-size: 0.8rem; margin-right: 6px;"> Khóa</span>` : '';
+  const lockHTML = post.privacy === 'locked' ? `<span style="font-size: 0.8rem; margin-right: 6px;"> Locked</span>` : '';
   
   let pinIcon = '';
   if (post.isPinned) {
     const daysLeft = post.pinnedAt ? Math.max(0, 7 - Math.floor((Date.now() - post.pinnedAt) / (1000 * 60 * 60 * 24))) : 7;
-    pinIcon = `<span style="color:#ef4444; font-size: 0.8rem; margin-right: 6px; font-weight: bold;">📌 Đã ghim (${daysLeft} ngày)</span>`;
+    pinIcon = `<span style="color:#ef4444; font-size: 0.8rem; margin-right: 6px; font-weight: bold;">📌 Pinned (${daysLeft} days)</span>`;
   }
 
   const commentCount = post.comment_count ?? (Array.isArray(post.comments) ? post.comments.length : 0);
@@ -650,8 +650,8 @@ function generatePostHTML(post, isThreadView = false) {
     ['admin', 'mod'].includes(authForPin.role)
   );
   
-  // Ẩn nội dung nếu không có quyền
-  const contentSnippet = canView ? post.content : `<div style="padding: 12px; background: #f8fafc; border: 1px dashed var(--clr-border); border-radius: 8px; font-style: italic; color: #64748b; font-size: 0.95rem;"> Nội dung đã bị khóa. Tính năng xem giới hạn cho tài khoản Premium, bạn bè, hoặc người được cấp quyền.</div>`;
+  // Hide content if user lacks permission
+  const contentSnippet = canView ? post.content : `<div style="padding: 12px; background: #f8fafc; border: 1px dashed var(--clr-border); border-radius: 8px; font-style: italic; color: #64748b; font-size: 0.95rem;"> Content is locked. Viewing is limited to Premium accounts, friends, or authorized users.</div>`;
 
   let attachmentHTML = '';
   if (canView && post.image_url) {
@@ -669,9 +669,9 @@ function generatePostHTML(post, isThreadView = false) {
       attachmentHTML = `<a href="${url}" download="${fileName}" class="file-attachment">📎 ${fileName}</a>`;
     }
   } else if (canView && post.fileData) {
-    if (post.fileType && post.fileType.startsWith('image/')) attachmentHTML = `<img src="${post.fileData}" class="card-image" alt="Đính kèm">`;
+    if (post.fileType && post.fileType.startsWith('image/')) attachmentHTML = `<img src="${post.fileData}" class="card-image" alt="Attachment">`;
     else if (post.fileType && post.fileType.startsWith('video/')) attachmentHTML = `<video src="${post.fileData}" class="card-image" controls style="max-width:100%;border-radius:8px"></video>`;
-    else attachmentHTML = `<a href="${post.fileData}" download="${post.fileName}" class="file-attachment"> <span>Tải xuống: ${post.fileName}</span></a>`;
+    else attachmentHTML = `<a href="${post.fileData}" download="${post.fileName}" class="file-attachment"> <span>Download: ${post.fileName}</span></a>`;
   }
 
   let pollHTML = '';
@@ -692,14 +692,14 @@ function generatePostHTML(post, isThreadView = false) {
             <div class="poll-bar"><div class="poll-fill" style="width:${percent}%; background: ${isMyVote ? 'var(--clr-primary)' : 'var(--clr-muted)'};"></div></div>
           </div>`;
       });
-      pollHTML += `<div style="text-align:right; margin-top:16px;"><button class="forum-btn outline small" onclick="resetPollVote(${post.id})">↺ Vote lại</button></div>`;
+      pollHTML += `<div style="text-align:right; margin-top:16px;"><button class="forum-btn outline small" onclick="resetPollVote(${post.id})">↺ Re-vote</button></div>`;
     } else {
       const stagedOpt = pendingVotes[post.id];
       safeOptions.forEach(opt => {
         const isSelected = stagedOpt === opt.id;
         pollHTML += `<div class="poll-option-row ${isSelected ? 'selected' : ''}" onclick="stagePollOption(${post.id}, ${opt.id})">${opt.text}</div>`;
       });
-      if (stagedOpt !== undefined) pollHTML += `<div style="text-align:right; margin-top:16px;"><button class="forum-btn primary small" onclick="confirmPollVote(${post.id})">Xác nhận Vote</button></div>`;
+      if (stagedOpt !== undefined) pollHTML += `<div style="text-align:right; margin-top:16px;"><button class="forum-btn primary small" onclick="confirmPollVote(${post.id})">Confirm Vote</button></div>`;
     }
     pollHTML += `</div>`;
   }
@@ -718,7 +718,7 @@ function generatePostHTML(post, isThreadView = false) {
       <div class="card-title" style="color: ${post.authorColor}">${post.title}</div>
       <div class="card-author">
         <img src="${post.authorAvatar || 'https://i.imgur.com/K3aDE8W.png'}" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border: 1px solid var(--clr-border);">
-        Bởi <strong style="color: var(--clr-text);">${post.author}</strong> ${badgeHTML}
+        By <strong style="color: var(--clr-text);">${post.author}</strong> ${badgeHTML}
       </div>
       <div class="${textClass}">${contentSnippet}</div>
       
@@ -731,15 +731,15 @@ function generatePostHTML(post, isThreadView = false) {
           <button class="vote-btn ${isDownvoted}" onclick="handleVote(${post.id}, 'down')">▼ ${post.downvotes}</button>
           <button class="vote-btn ghost">💬 ${commentCount}</button>
         </div>
-        ${canPin ? `<button class="vote-btn ghost" onclick="togglePin(${post.id})">${post.isPinned ? '📌 Bỏ Ghim' : '📌 Ghim bài'}</button>` : ''}
-        ${canDelete ? `<button class="vote-btn ghost" style="color:#ef4444;" onclick="deletePost(${post.id}, event)">🗑 Xóa</button>` : ''}
+        ${canPin ? `<button class="vote-btn ghost" onclick="togglePin(${post.id})">${post.isPinned ? '📌 Unpin' : '📌 Pin post'}</button>` : ''}
+        ${canDelete ? `<button class="vote-btn ghost" style="color:#ef4444;" onclick="deletePost(${post.id}, event)">🗑 Delete</button>` : ''}
       </div>
     </div>
   `;
 }
 
 async function submitComment() {
-  if (!getAuthUser()) return promptLogin("Vui lòng đăng nhập để bình luận.");
+  if (!getAuthUser()) return promptLogin("Please log in to comment.");
 
   const inputEl = document.getElementById('commentInput');
   const text = inputEl.value.trim();
@@ -773,7 +773,7 @@ async function submitComment() {
 
     inputEl.value = ''; cancelReply(); renderThreadView(); 
   } catch (error) {
-    alert("Lỗi: " + error.message);
+    alert("Error: " + error.message);
   }
 }
 
@@ -785,7 +785,7 @@ function renderThreadView() {
   document.getElementById('threadContent').innerHTML = generatePostHTML(post, true);
   const commentsList = document.getElementById('threadCommentsList');
   
-  // Khóa bình luận nếu không có quyền xem
+  // Lock comments if user lacks view permission
   const canView = !(post.privacy === 'locked' && !isPremium && post.author !== sysName);
   if(!canView) {
     commentsList.innerHTML = '';
@@ -796,7 +796,7 @@ function renderThreadView() {
   }
 
   if (!Array.isArray(post.comments) || post.comments.length === 0) {
-    commentsList.innerHTML = '<div style="color:var(--clr-muted); font-style:italic; font-size:0.95rem; text-align:center; padding: 20px 0;">Chưa có bình luận nào. Hãy là người đầu tiên!</div>';
+    commentsList.innerHTML = '<div style="color:var(--clr-muted); font-style:italic; font-size:0.95rem; text-align:center; padding: 20px 0;">No comments yet. Be the first!</div>';
   } else {
     commentsList.innerHTML = post.comments.map(c => {
       let replySnippetHTML = '';
@@ -824,8 +824,8 @@ function renderThreadView() {
           </div>
           <div class="comment-text">${c.text}</div>
           <div class="comment-actions">
-            <span onclick="setReply(${c.id}, '${c.author}')">Trả lời</span>
-            ${canDelComment && c.source !== 'local-poll' ? `<span style="color:#ef4444; margin-left:8px;" onclick="deleteComment(${c.id}, ${post.id})">🗑 Xóa</span>` : ''}
+            <span onclick="setReply(${c.id}, '${c.author}')">Reply</span>
+            ${canDelComment && c.source !== 'local-poll' ? `<span style="color:#ef4444; margin-left:8px;" onclick="deleteComment(${c.id}, ${post.id})">🗑 Delete</span>` : ''}
           </div>
         </div>
       </div>
@@ -833,7 +833,7 @@ function renderThreadView() {
   }
 }
 
-// ================= CÁC HÀM TIỆN ÍCH =================
+// ================= UTILITY FUNCTIONS =================
 function handleCommentEnter(event) { if (event.key === "Enter") submitComment(); }
 function setReply(commentId, authorName) {
   replyingToCommentId = commentId;
@@ -849,7 +849,7 @@ function cancelReply() {
 
 async function deletePost(postId, e) {
   if (e) e.stopPropagation();
-  if (!confirm('Bạn có chắc muốn xóa bài đăng này?')) return;
+  if (!confirm('Are you sure you want to delete this post?')) return;
   const post = posts.find(p => p.id === postId);
   if (!post) return;
   try {
@@ -867,12 +867,12 @@ async function deletePost(postId, e) {
     closeThread();
     renderPosts();
   } catch (err) {
-    alert('Lỗi khi xóa bài: ' + err.message);
+    alert('Error deleting post: ' + err.message);
   }
 }
 
 async function deleteComment(commentId, postId) {
-  if (!confirm('Xóa bình luận này?')) return;
+  if (!confirm('Delete this comment?')) return;
   const post = posts.find(p => p.id === postId);
   if (!post) return;
   try {
@@ -888,14 +888,14 @@ async function deleteComment(commentId, postId) {
     }
     renderThreadView();
   } catch (err) {
-    alert('Lỗi khi xóa bình luận: ' + err.message);
+    alert('Error deleting comment: ' + err.message);
   }
 }
 
 function filterOnly(type) {
   currentFilterType = type;
   
-  // Highlight nút Tất cả bài
+  // Highlight All Posts button
   const allBtn = document.getElementById('filter-btn-all-types');
   if(allBtn) {
     if(type === 'all') allBtn.style.background = 'var(--clr-bg)';
@@ -934,7 +934,7 @@ function checkExpirations() {
 async function handleVote(postId, voteType) {
   const post = posts.find(p => p.id === postId);
   if (!post) return;
-  if (!getAuthUser()) return promptLogin("Vui lòng đăng nhập để bình chọn.");
+  if (!getAuthUser()) return promptLogin("Please log in to vote.");
 
   // Debounce: ignore if less than 600ms since last vote on this post
   const now = Date.now();
@@ -973,7 +973,7 @@ async function handleVote(postId, voteType) {
     post.lastActive = Date.now();
     saveVoteState(postId, post.currentUserVote);
   } catch (error) {
-    alert("Lỗi: " + error.message);
+    alert("Error: " + error.message);
   }
 
   if (currentOpenPostId) renderThreadView(); else renderPosts();
@@ -981,12 +981,12 @@ async function handleVote(postId, voteType) {
 
 async function togglePin(postId) {
   const authU = getAuthUser();
-  if (!authU) return promptLogin("Vui lòng đăng nhập.");
+  if (!authU) return promptLogin("Please log in.");
   const targetPost = posts.find(p => p.id === postId);
   if (!targetPost) return;
 
   const canPin = String(targetPost.user_id) === String(authU.id) || ['admin', 'mod'].includes(authU.role);
-  if (!canPin) return alert("Chỉ tác giả hoặc quản trị viên mới có thể ghim bài.");
+  if (!canPin) return alert("Only the author or an admin can pin posts.");
 
   if (targetPost.source === 'local-poll') {
     targetPost.isPinned = !targetPost.isPinned;
@@ -1006,7 +1006,7 @@ async function togglePin(postId) {
     targetPost.pinnedAt = targetPost.isPinned ? Date.now() : null;
     persistPinState(targetPost);
   } catch (error) {
-    alert("Lỗi: " + error.message);
+    alert("Error: " + error.message);
   }
   if (currentOpenPostId) renderThreadView(); else renderPosts();
 }
@@ -1015,7 +1015,7 @@ function openThread(event, postId) {
   if (event && event.target.closest('button')) return;
   const post = posts.find(p => p.id === postId);
   
-  if (post.privacy === 'locked' && !isPremium && post.author !== sysName) return alert(" Bài đăng này đã bị khóa. Tính năng xem giới hạn cho tài khoản Premium, bạn bè, hoặc người được cấp quyền. Bạn hãy gửi yêu cầu để xem!");
+  if (post.privacy === 'locked' && !isPremium && post.author !== sysName) return alert(" This post is locked. Viewing is limited to Premium accounts, friends, or authorized users. Send a request to view!");
   
   currentOpenPostId = postId;
   document.getElementById('postsContainer').style.display = 'none';
@@ -1053,7 +1053,7 @@ async function renderPosts() {
   if (searchKey) filtered = filtered.filter(p => p.title.toLowerCase().includes(searchKey) || p.content.toLowerCase().includes(searchKey));
   filtered = filtered.filter(p => activeFilterTags.some(tag => p.tags.includes(tag)));
 
-  // Sắp xếp an toàn chống crash do NaN
+  // Safe sort to prevent NaN crashes
   filtered.sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
@@ -1063,7 +1063,7 @@ async function renderPosts() {
 
   const container = document.getElementById('postsContainer');
   if(!container) return;
-  container.innerHTML = filtered.length === 0 ? '<div style="text-align:center; padding: 40px; color: var(--clr-muted); background: var(--clr-surface); border-radius: 12px; border: 1px dashed var(--clr-border);">Không có dữ liệu hiển thị.</div>' : filtered.map(p => generatePostHTML(p, false)).join('');
+  container.innerHTML = filtered.length === 0 ? '<div style="text-align:center; padding: 40px; color: var(--clr-muted); background: var(--clr-surface); border-radius: 12px; border: 1px dashed var(--clr-border);">No posts to display.</div>' : filtered.map(p => generatePostHTML(p, false)).join('');
   renderWidgets();
 }
 
@@ -1072,14 +1072,16 @@ function renderWidgets() {
   const pollsContainer = document.getElementById('activePollsWidget');
   if(trendingContainer) {
     const trending = [...posts].filter(p => p.type === 'post').sort((a, b) => (b.upvotes + (Array.isArray(b.comments)?b.comments.length:0)) - (a.upvotes + (Array.isArray(a.comments)?a.comments.length:0))).slice(0, 3);
-    trendingContainer.innerHTML = trending.length ? trending.map(p => `<div class="widget-item"><div style="font-size:1.2rem;"></div><div><div class="widget-item-title" onclick="openThread(null, ${p.id})">${p.title}</div><div class="widget-item-meta">${p.upvotes} Votes • Bởi ${p.author}</div></div></div>`).join('') : '<div style="font-size:0.8rem; color:#94a3b8;">Chưa có dữ liệu</div>';
+    trendingContainer.innerHTML = trending.length ? trending.map(p => `<div class="widget-item"><div style="font-size:1.2rem;"></div><div><div class="widget-item-title" onclick="openThread(null, ${p.id})">${p.title}</div><div class="widget-item-meta">${p.upvotes} Votes • By ${p.author}</div></div></div>`).join('') : '<div style="font-size:0.8rem; color:#94a3b8;">No data yet</div>';
   }
   if(pollsContainer) {
     const polls = [...posts].filter(p => p.type === 'poll').sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0)).slice(0, 3);
     pollsContainer.innerHTML = polls.length ? polls.map(p => {
       const safeOptions = Array.isArray(p.pollOptions) ? p.pollOptions : [];
       const totalVotes = safeOptions.reduce((s,o)=>s+(Number(o.votes)||0), 0);
-      return `<div class="widget-item"><div style="font-size:1.2rem;"></div><div><div class="widget-item-title" onclick="openThread(null, ${p.id})">${p.title}</div><div class="widget-item-meta">${totalVotes} Lượt bình chọn</div></div></div>`
-    }).join('') : '<div style="font-size:0.8rem; color:#94a3b8;">Chưa có khảo sát</div>';
+      return `<div class="widget-item"><div style="font-size:1.2rem;"></div><div><div class="widget-item-title" onclick="openThread(null, ${p.id})">${p.title}</div><div class="widget-item-meta">${totalVotes} Votes</div></div></div>`
+    }).join('') : '<div style="font-size:0.8rem; color:#94a3b8;">No polls yet</div>';
   }
 }
+
+

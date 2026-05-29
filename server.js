@@ -10,6 +10,7 @@ const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const mammoth = require("mammoth");
 const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 let sharp;
 try { sharp = require("sharp"); } catch (e) { sharp = null; }
 
@@ -186,6 +187,8 @@ db.serialize(() => {
   db.run("ALTER TABLE notifications ADD COLUMN sender_name TEXT", () => {});
   db.run("ALTER TABLE notifications ADD COLUMN link_data TEXT", () => {});
   db.run("ALTER TABLE documents ADD COLUMN description TEXT DEFAULT ''", () => {});
+  db.run("ALTER TABLE users ADD COLUMN is_guest INTEGER DEFAULT 0", () => {});
+  db.run("ALTER TABLE users ADD COLUMN guest_expires_at DATETIME", () => {});
 
   db.run(`
     CREATE TABLE IF NOT EXISTS documents (
@@ -293,6 +296,19 @@ db.serialize(() => {
     )
   `);
 });
+
+// --- Guest account cleanup (runs on startup + every 6 hours) ---
+function cleanupExpiredGuests() {
+  db.run(
+    "DELETE FROM users WHERE is_guest = 1 AND guest_expires_at < datetime('now')",
+    function(err) {
+      if (!err && this.changes > 0)
+        console.log(`[Cleanup] Removed ${this.changes} expired guest account(s)`);
+    }
+  );
+}
+cleanupExpiredGuests();
+setInterval(cleanupExpiredGuests, 6 * 60 * 60 * 1000);
 
 // --- Auth middleware ---
 function requireAuth(req, res, next) {
@@ -518,6 +534,41 @@ app.post("/api/auth/login", (req, res) => {
   );
 });
 
+// --- Guest Login ---
+app.post("/api/auth/guest", async (req, res) => {
+  const suffix = crypto.randomBytes(4).toString("hex"); // 8 hex chars
+  const username = `guest_${suffix}`;
+  const email = `${username}@guest.internal`;
+  const fakePassword = crypto.randomBytes(32).toString("hex");
+
+  try {
+    const password_hash = await bcrypt.hash(fakePassword, 10);
+    const expiresAt = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000)
+      .toISOString().replace("T", " ").slice(0, 19);
+
+    db.run(
+      `INSERT INTO users (username, email, password_hash, email_verified, is_guest, guest_expires_at)
+       VALUES (?, ?, ?, 1, 1, ?)`,
+      [username, email, password_hash, expiresAt],
+      function(err) {
+        if (err) return res.status(500).json({ error: "Could not create guest account" });
+        const id = this.lastID;
+        const token = jwt.sign(
+          { id, username, email, tier: "member", role: "member", is_guest: true },
+          JWT_SECRET,
+          { expiresIn: "10d" }
+        );
+        res.json({
+          token,
+          user: { id, username, email, tier: "member", role: "member", is_guest: true }
+        });
+      }
+    );
+  } catch {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 app.get("/api/auth/check-username/:username", (req, res) => {
   const { username } = req.params;
   db.get("SELECT id FROM users WHERE username = ?", [username], (err, row) => {
@@ -531,6 +582,20 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
     if (err || !user) return res.json({ user: req.user });
     res.json({ user: { ...req.user, role: user.role || "member", avatar_url: user.avatar_url, created_at: user.created_at } });
   });
+});
+
+// --- Update own profile (bio, institution, research_tags) ---
+app.patch("/api/auth/profile", requireAuth, (req, res) => {
+  const { bio, institution, research_tags } = req.body;
+  const tagsJson = Array.isArray(research_tags) ? JSON.stringify(research_tags) : (research_tags || '[]');
+  db.run(
+    "UPDATE users SET bio = ?, institution = ?, research_tags = ? WHERE id = ?",
+    [bio || '', institution || '', tagsJson, req.user.id],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ ok: true });
+    }
+  );
 });
 
 app.patch("/api/auth/username", requireAuth, async (req, res) => {
@@ -656,6 +721,61 @@ app.patch("/api/admin/role-requests/:id", requireAuth, (req, res) => {
       }
       res.json({ success: true, status });
     });
+  });
+});
+
+// --- Heartbeat (update last_seen) ---
+app.post("/api/auth/heartbeat", requireAuth, (req, res) => {
+  db.run("UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE id = ?", [req.user.id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ ok: true });
+  });
+});
+
+// --- Online users ---
+app.get("/api/users/online", requireAuth, (req, res) => {
+  // Users seen within the last 5 minutes
+  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19);
+  db.all(
+    `SELECT id, username, avatar_url, role FROM users
+     WHERE last_seen >= ? ORDER BY last_seen DESC LIMIT 50`,
+    [fiveMinAgo],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows || []);
+    }
+  );
+});
+
+// --- Public user profile ---
+app.get("/api/users/profile/:username", (req, res) => {
+  db.get(
+    `SELECT id, username, full_name, avatar_url, role, bio, institution, research_tags, created_at
+     FROM users WHERE username = ?`,
+    [req.params.username],
+    (err, user) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!user) return res.status(404).json({ error: "User not found" });
+      // Fetch their forum posts
+      db.all(
+        `SELECT id, title, content, tags, upvotes, created_at FROM forum_posts
+         WHERE author_id = ? ORDER BY created_at DESC LIMIT 20`,
+        [user.id],
+        (err2, posts) => {
+          res.json({ ...user, posts: posts || [] });
+        }
+      );
+    }
+  );
+});
+
+// --- Dev Premium toggle (for testing only) ---
+app.post("/api/auth/dev-premium", requireAuth, (req, res) => {
+  const { enable } = req.body;
+  const tier = enable ? "premium" : "free";
+  db.run("UPDATE users SET tier = ? WHERE id = ?", [tier, req.user.id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ ok: true, tier });
   });
 });
 

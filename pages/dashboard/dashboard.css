@@ -210,6 +210,15 @@ body::before {
   border-radius: 6px;
   padding: 3px 8px;
 }
+.db-guest-badge {
+  font-size: .67rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 6px;
+  padding: 3px 8px;
+}
 .db-icon-btn {
   position: relative;
   background: none;
@@ -713,4 +722,214 @@ body::before {
 @keyframes demo-pop-in {
   from { opacity:0; transform:translateY(6px); }
   to   { opacity:1; transform:translateY(0); }
+}
+
+/* ============= USER DROPDOWN ============= */
+.db-user-chip-wrap {
+  position: relative;
+}
+.db-user-chip {
+  cursor: pointer;
+}
+.db-chip-chevron {
+  width: 12px;
+  height: 12px;
+  color: var(--text-light);
+  flex-shrink: 0;
+  transition: transform .2s;
+}
+.db-dropdown-open .db-chip-chevron {
+  transform: rotate(180deg);
+}
+.db-user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.12);
+  min-width: 180px;
+  z-index: 999;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+.db-dropdown-open .db-user-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.db-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  font-size: .85rem;
+  color: var(--text-dark);
+  text-decoration: none;
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  transition: background .12s;
+  text-align: left;
+}
+.db-dropdown-item:hover { background: var(--bg); }
+.db-dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 2px 0;
+}
+.db-dropdown-logout { color: #ef4444; }
+.db-dropdown-logout:hover { background: #fff1f1; }
+
+/* ============= UPGRADE ACTIVE BUTTON ============= */
+.db-upgrade-btn-active {
+  background: var(--purple);
+  color: #fff;
+  font-size: .73rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 7px;
+  white-space: nowrap;
+  transition: opacity .15s;
+  cursor: pointer;
+}
+.db-upgrade-btn-active:hover { opacity: .85; }
+
+/* ============= LOGOUT MODAL ============= */
+.db-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,10,40,.5);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: modal-fade-in .18s ease;
+}
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.db-modal-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 380px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,.18);
+  animation: modal-slide-in .2s ease;
+}
+@keyframes modal-slide-in {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.db-modal-title { font-size: 1.1rem; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
+.db-modal-text  { font-size: .88rem; color: #6b7280; margin-bottom: 24px; }
+.db-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.db-modal-btn-cancel {
+  background: var(--bg);
+  color: var(--text-dark);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .12s;
+}
+.db-modal-btn-cancel:hover { background: #e5e7eb; }
+.db-modal-btn-confirm {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: .85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .12s;
+}
+.db-modal-btn-confirm:hover { opacity: .88; }
+
+/* ============= LIVE MEMBERS / MENTORS ============= */
+.db-active-members-live {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0 10px;
+  min-height: 40px;
+}
+.db-live-member {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--purple);
+  color: #fff;
+  font-size: .82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(.8);
+  transition: opacity .3s, transform .3s;
+  cursor: pointer;
+}
+.db-live-member-in {
+  opacity: 1;
+  transform: scale(1);
+}
+.db-live-member-out {
+  opacity: 0;
+  transform: scale(.6);
+}
+.db-member-online-label {
+  font-size: .75rem;
+  color: var(--text-light);
+  padding-top: 4px;
+}
+.db-dot-online {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+}
+
+/* ============= PANEL EXPAND / COLLAPSE ============= */
+.db-panel-expand-btn, .db-panel-collapse-btn {
+  background: none;
+  border: none;
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--purple);
+  cursor: pointer;
+  padding: 0;
+  transition: opacity .15s;
+}
+.db-panel-expand-btn:hover, .db-panel-collapse-btn:hover { opacity: .7; }
+.db-panel-collapse-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+.db-panel-hidden {
+  display: none;
+}
+.db-panel-expanded {
+  max-height: 600px;
+  overflow-y: auto;
+}
+.db-panel-expanded .db-mentor-list-live,
+.db-panel-expanded .db-active-members-live {
+  max-height: 500px;
+  overflow-y: auto;
 }

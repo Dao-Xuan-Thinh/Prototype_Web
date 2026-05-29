@@ -58,6 +58,10 @@
           <p class="choice-sub">Continue to your ResearchGate account.</p>
           <button onclick="showLogin()" class="btn-primary-full" style="margin-top:24px;">Log In</button>
           <a id="create-acct-btn" href="onboarding.html" class="btn-outline-full" style="margin-top:12px;">Create Account &rarr;</a>
+          <button onclick="loginAsGuest(this)" class="btn-guest-full" style="margin-top:10px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            Continue as Guest
+          </button>
           <p class="auth-switch" style="margin-top:20px; font-size:0.78rem;">
             By continuing, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.
           </p>
@@ -101,7 +105,7 @@
           </div>
 
           <div class="form-row">
-            <label><input type="checkbox" /> Remember me</label>
+            <label><input type="checkbox" id="remember-me" /> Remember me</label>
             <a href="#">Forgot password?</a>
           </div>
 
@@ -125,6 +129,29 @@
     if (_role) {
       document.getElementById('create-acct-btn').href = 'onboarding.html?role=' + _role;
       document.getElementById('register-link').href   = 'onboarding.html?role=' + _role;
+    }
+
+    async function loginAsGuest(btn) {
+      const original = btn.innerHTML;
+      btn.disabled = true;
+      btn.textContent = 'Setting up guest session…';
+      try {
+        const res  = await fetch('/api/auth/guest', { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) {
+          btn.innerHTML = original;
+          btn.disabled = false;
+          showError(data.error || 'Could not start guest session.');
+          return;
+        }
+        sessionStorage.setItem('rg_token', data.token);
+        sessionStorage.setItem('rg_user',  JSON.stringify(data.user));
+        window.location.href = '../dashboard/dashboard.html';
+      } catch {
+        btn.innerHTML = original;
+        btn.disabled = false;
+        showError('Network error. Please try again.');
+      }
     }
 
     // Accordion expand/collapse
@@ -249,8 +276,13 @@
           return;
         }
 
-        localStorage.setItem('rg_token', data.token);
-        localStorage.setItem('rg_user', JSON.stringify(data.user));
+        const remember = document.getElementById('remember-me')?.checked;
+        const store = remember ? localStorage : sessionStorage;
+        store.setItem('rg_token', data.token);
+        store.setItem('rg_user', JSON.stringify(data.user));
+        // Always clear the other store to avoid stale data
+        if (remember) sessionStorage.removeItem('rg_token');
+        else localStorage.removeItem('rg_token');
         window.location.href = '../dashboard/dashboard.html';
       } catch (err) {
         showError('Network error. Please try again.');

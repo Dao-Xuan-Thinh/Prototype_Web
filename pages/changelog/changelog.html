@@ -21,9 +21,35 @@
 
     <div class="cl-timeline">
 
-      <!-- RC Batch HOTFIX 1.3 -->
+      <!-- Test Batch 1.5 -->
       <div class="cl-entry">
         <div class="cl-badge cl-badge--new">Latest</div>
+        <div class="cl-card">
+          <div class="cl-date-top">May 29, 2026</div>
+          <h2 class="cl-version">Test Batch 1.5 — Dashboard Shell, Real-time, Settings/Buy/Forum Revamp, Profile</h2>
+          <ul class="cl-list">
+            <li>[*] <strong>Global dashboard chrome</strong> — <code>js/dashboard-shell.js</code> injects sidebar, topbar, user chip dropdown, and logout modal into all inner pages</li>
+            <li>[+] <strong>Remember Me fix</strong> — dual-storage auth: <code>rg_token</code>/<code>rg_user</code> saved to localStorage (Remember Me on) or sessionStorage (off); browser remembers login between sessions</li>
+            <li>[+] <strong>Active Members &amp; Online Mentors</strong> — real-time heartbeat (5s), users auto-appear/disappear from sidebar list; smooth DOM diffing — no white flash</li>
+            <li>[+] <strong>User chip dropdown</strong> — click user name in dashboard topbar for Profile, Settings, and Log Out (with confirmation modal)</li>
+            <li>[*] <strong>Settings page revamp</strong> — rebuilt on dashboard shell; cleaner layout, removed legacy nav/footer</li>
+            <li>[+] <strong>Buy Premium page</strong> — new English 4-tier pricing page (Free / Plus / Pro / Unlimited); all buy buttons grayed; Dev Premium toggle for testing</li>
+            <li>[*] <strong>Forum page revamp</strong> — rebuilt on dashboard shell; fully English UI; 5s realtime poll; Featured Discussions linked to dashboard widget</li>
+            <li>[+] <strong>User Profile page</strong> — Facebook-style profile with avatar, bio, institution, research interests, forum posts; edit own profile in modal</li>
+            <li>[+] <strong>Dashboard demo mode</strong> — toggle button fills all widgets with dummy data so stakeholders can see the product in action</li>
+          </ul>
+        </div>
+        <div class="cl-contributors">
+          <div class="cl-contributor">
+            <div class="cl-avatar" style="background: var(--clr-primary)">S</div>
+            <span class="cl-contributor-name">Spider</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RC Batch HOTFIX 1.3 -->
+      <div class="cl-entry">
+        <div class="cl-badge">RC HF 1.3</div>
         <div class="cl-card">
           <div class="cl-date-top">May 25, 2026 · 20:00</div>
           <h2 class="cl-version">RC Batch HOTFIX 1.3 — Delete/Recall, Theme Fix, Compression + Bonuses</h2>

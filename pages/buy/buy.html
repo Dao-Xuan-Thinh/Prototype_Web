@@ -1,337 +1,212 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Upgrade to Premium — Protocol</title>
-    <link rel="stylesheet" href="../../css/style.css" />
-    <link rel="stylesheet" href="buy.css" />
-  </head>
-  <body>
-    <!-- Navbar (đồng bộ với index.html) -->
-    <div id="site-nav"></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Go Premium — ResearchGate</title>
+  <link rel="stylesheet" href="../dashboard/dashboard.css" />
+  <link rel="stylesheet" href="buy.css" />
+</head>
+<body data-active-page="buy">
 
-    <main class="buy-main">
-      <div class="buy-container">
-        <!-- Page Header -->
-        <div class="buy-header">
-          <div class="buy-header-text">
-            <h1 class="buy-title">
-              Chọn gói Premium phù hợp với lộ<br />trình nghiên cứu của bạn.
-            </h1>
-            <p class="buy-subtitle">
-              Nâng cao hiệu suất nghiên cứu khoa học với các công cụ AI tiên
-              tiến và sự hỗ trợ từ các chuyên gia hàng đầu.
-            </p>
+  <div id="db-shell-sidebar"></div>
+
+  <div class="db-main-wrapper">
+    <div id="db-shell-topbar"></div>
+
+    <div class="db-body buy-body">
+
+      <main class="buy-main">
+        <div class="buy-container">
+
+          <!-- Page Header -->
+          <div class="buy-header">
+            <div class="buy-header-text">
+              <h1 class="buy-title">Choose the plan that fits your<br/>research journey.</h1>
+              <p class="buy-subtitle">
+                Supercharge your research productivity with advanced AI tools and expert mentor support.
+              </p>
+            </div>
+            <!-- Dev Premium toggle -->
+            <div class="buy-dev-badge" id="buy-dev-toggle-wrap" title="Developer testing mode">
+              <span class="buy-dev-label">Dev Premium</span>
+              <label class="buy-dev-switch">
+                <input type="checkbox" id="buy-dev-toggle">
+                <span class="buy-dev-slider"></span>
+              </label>
+              <span class="buy-dev-status" id="buy-dev-status">OFF</span>
+            </div>
           </div>
-          <div class="buy-header-line"></div>
-        </div>
 
-        <!-- Plans Grid -->
-        <div class="buy-plans">
-          <!-- Miễn phí -->
-          <div class="buy-card">
-            <div class="buy-card-header">
-              <div class="plan-name">Miễn phí</div>
-              <div class="plan-price">
-                <span class="plan-amount">0đ</span>
-                <span class="plan-period">/tháng</span>
+          <!-- Plans Grid -->
+          <div class="buy-plans">
+
+            <!-- Free -->
+            <div class="buy-card">
+              <div class="buy-card-header">
+                <div class="plan-name">Free</div>
+                <div class="plan-price">
+                  <span class="plan-amount">$0</span>
+                  <span class="plan-period">/month</span>
+                </div>
+              </div>
+              <div class="buy-divider"></div>
+              <ul class="plan-features">
+                <li><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>Basic research access</li>
+                <li><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>Limited search capabilities</li>
+                <li><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>Community forum access</li>
+              </ul>
+              <button class="buy-btn buy-btn--disabled" disabled>Current Plan</button>
+            </div>
+
+            <!-- Plus -->
+            <div class="buy-card">
+              <div class="buy-card-header">
+                <div class="plan-name">Plus</div>
+                <div class="plan-price">
+                  <span class="plan-amount">$9</span>
+                  <span class="plan-period">/month</span>
+                </div>
+              </div>
+              <div class="buy-divider"></div>
+              <ul class="plan-features">
+                <li><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>Advanced search by year, topic &amp; citation</li>
+                <li><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>AI-powered paper recommendations</li>
+                <li><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>Unlimited saved research papers</li>
+                <li><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>Access to advanced academic documents</li>
+              </ul>
+              <button class="buy-btn buy-btn--disabled" disabled>Coming Soon</button>
+            </div>
+
+            <!-- Pro (featured) -->
+            <div class="buy-card buy-card--featured">
+              <div class="buy-featured-badge">Recommended</div>
+              <div class="buy-card-header">
+                <div class="plan-name">Pro</div>
+                <div class="plan-price">
+                  <span class="plan-amount">$19</span>
+                  <span class="plan-period">/month</span>
+                </div>
+              </div>
+              <div class="buy-divider"></div>
+              <ul class="plan-features">
+                <li class="plan-feature--bold"><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>Everything in Plus</li>
+                <li><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>Unlimited AI usage (summaries &amp; rewriting)</li>
+                <li><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>Advanced unlimited plagiarism checker</li>
+                <li><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>AI-powered survey creation</li>
+              </ul>
+              <button class="buy-btn buy-btn--filled buy-btn--disabled" disabled>Coming Soon</button>
+            </div>
+
+            <!-- Unlimited -->
+            <div class="buy-card">
+              <div class="buy-card-header">
+                <div class="plan-name">Unlimited</div>
+                <div class="plan-price">
+                  <span class="plan-amount">$39</span>
+                  <span class="plan-period">/month</span>
+                </div>
+              </div>
+              <div class="buy-divider"></div>
+              <ul class="plan-features">
+                <li class="plan-feature--bold"><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>Everything in Pro</li>
+                <li><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>Priority mentor response</li>
+                <li><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>Research proposal &amp; outline review</li>
+                <li><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>Premium badge &amp; priority visibility</li>
+                <li><span class="plan-check"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="2,5 4.5,7.5 8,3"/></svg></span>Private research group access</li>
+              </ul>
+              <button class="buy-btn buy-btn--disabled" disabled>Contact Us</button>
+            </div>
+
+          </div><!-- /buy-plans -->
+
+          <!-- Dev Premium Notice -->
+          <div class="buy-dev-notice" id="buy-dev-notice" style="display:none">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#6c47ff" stroke-width="1.8"/><path d="M10 6v4" stroke="#6c47ff" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="14" r="1" fill="#6c47ff"/></svg>
+            <span><strong>Dev Premium Active</strong> — Your account has been temporarily upgraded for testing. This is a developer-only feature and does not grant a real paid subscription.</span>
+          </div>
+
+          <!-- Feature highlights -->
+          <div class="buy-highlights">
+            <div class="buy-highlight buy-highlight--primary">
+              <div class="buy-highlight-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
+              <div>
+                <div class="buy-highlight-title">AI-Powered Research</div>
+                <div class="buy-highlight-desc">Next-generation AI technology that saves you hundreds of hours of reading and data analysis every year.</div>
               </div>
             </div>
-            <div class="buy-divider"></div>
-            <ul class="plan-features">
-              <li>
-                <span class="plan-check">
-                  <svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" />
-                  </svg>
-                </span>
-                Basic research access
-              </li>
-              <li>
-                <span class="plan-check">
-                  <svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" />
-                  </svg>
-                </span>
-                Limited search capabilities
-              </li>
-            </ul>
-            <button class="buy-btn">Bắt đầu ngay</button>
-          </div>
-
-          <!-- Plus -->
-          <div class="buy-card">
-            <div class="buy-card-header">
-              <div class="plan-name">Plus</div>
-              <div class="plan-price">
-                <span class="plan-amount">299k</span>
-                <span class="plan-period">/tháng</span>
+            <div class="buy-highlight buy-highlight--muted">
+              <div class="buy-highlight-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+              </div>
+              <div>
+                <div class="buy-highlight-title">Expert Mentor Support</div>
+                <div class="buy-highlight-desc">Connect directly with field experts to receive fast, in-depth feedback on your research.</div>
               </div>
             </div>
-            <div class="buy-divider"></div>
-            <ul class="plan-features">
-              <li>
-                <span class="plan-check"
-                  ><svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" /></svg
-                ></span>
-                Tìm kiếm nâng cao theo năm, chủ đề, trích dẫn
-              </li>
-              <li>
-                <span class="plan-check"
-                  ><svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" /></svg
-                ></span>
-                Gợi ý bài nghiên cứu bằng AI
-              </li>
-              <li>
-                <span class="plan-check"
-                  ><svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" /></svg
-                ></span>
-                Lưu không giới hạn bài nghiên cứu
-              </li>
-              <li>
-                <span class="plan-check"
-                  ><svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" /></svg
-                ></span>
-                Truy cập tài liệu học thuật nâng cao
-              </li>
-            </ul>
-            <button class="buy-btn">Nâng cấp Plus</button>
-          </div>
+          </div><!-- /buy-highlights -->
 
-          <!-- Pro (featured) -->
-          <div class="buy-card buy-card--featured">
-            <div class="buy-featured-badge">Khuyến dùng</div>
-            <div class="buy-card-header">
-              <div class="plan-name">Pro</div>
-              <div class="plan-price">
-                <span class="plan-amount">599k</span>
-                <span class="plan-period">/tháng</span>
-              </div>
-            </div>
-            <div class="buy-divider"></div>
-            <ul class="plan-features">
-              <li class="plan-feature--bold">
-                <span class="plan-check"
-                  ><svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" /></svg
-                ></span>
-                Tất cả tính năng Plus
-              </li>
-              <li>
-                <span class="plan-check"
-                  ><svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" /></svg
-                ></span>
-                Sử dụng AI không giới hạn (Tóm tắt, văn phong)
-              </li>
-              <li>
-                <span class="plan-check"
-                  ><svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" /></svg
-                ></span>
-                Kiểm tra đạo văn nâng cao không giới hạn
-              </li>
-              <li>
-                <span class="plan-check"
-                  ><svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" /></svg
-                ></span>
-                Tạo bảng khảo sát chuyên sâu bằng AI
-              </li>
-            </ul>
-            <button class="buy-btn buy-btn--filled">Nâng cấp Pro</button>
-          </div>
+        </div><!-- /buy-container -->
+      </main>
 
-          <!-- Unlimited -->
-          <div class="buy-card">
-            <div class="buy-card-header">
-              <div class="plan-name">Unlimited</div>
-              <div class="plan-price">
-                <span class="plan-amount">999k</span>
-                <span class="plan-period">/tháng</span>
-              </div>
-            </div>
-            <div class="buy-divider"></div>
-            <ul class="plan-features">
-              <li class="plan-feature--bold">
-                <span class="plan-check"
-                  ><svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" /></svg
-                ></span>
-                Tất cả tính năng Pro
-              </li>
-              <li>
-                <span class="plan-check"
-                  ><svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" /></svg
-                ></span>
-                Ưu tiên phản hồi từ Mentor
-              </li>
-              <li>
-                <span class="plan-check"
-                  ><svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" /></svg
-                ></span>
-                Góp ý proposal &amp; outline nghiên cứu
-              </li>
-              <li>
-                <span class="plan-check"
-                  ><svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" /></svg
-                ></span>
-                Huy hiệu Premium &amp; Ưu tiên hiển thị
-              </li>
-              <li>
-                <span class="plan-check"
-                  ><svg
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                  >
-                    <polyline points="2,5 4.5,7.5 8,3" /></svg
-                ></span>
-                Tham gia nhóm nghiên cứu riêng biệt
-              </li>
-            </ul>
-            <button class="buy-btn">Liên hệ</button>
-          </div>
-        </div>
-        <!-- /buy-plans -->
+    </div>
+  </div>
 
-        <!-- Feature highlight cards -->
-        <div class="buy-highlights">
-          <div class="buy-highlight buy-highlight--primary">
-            <div class="buy-highlight-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-              </svg>
-            </div>
-            <div>
-              <div class="buy-highlight-title">Sức mạnh AI</div>
-              <div class="buy-highlight-desc">
-                Công nghệ AI thế hệ mới giúp bạn tiết kiệm hàng trăm giờ đọc và
-                phân tích dữ liệu mỗi năm.
-              </div>
-            </div>
-          </div>
+  <script>
+    window.AppConfig = { API: '/api' };
+    window.Auth = {
+      getToken: function() {
+        return localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token');
+      },
+      getUser: function() {
+        try {
+          const raw = localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user');
+          return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+      }
+    };
+  </script>
+  <script src="../../js/dashboard-shell.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const toggle = document.getElementById('buy-dev-toggle');
+      const status = document.getElementById('buy-dev-status');
+      const notice = document.getElementById('buy-dev-notice');
 
-          <div class="buy-highlight buy-highlight--muted">
-            <div class="buy-highlight-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                <path d="M6 12v5c3 3 9 3 12 0v-5" />
-              </svg>
-            </div>
-            <div>
-              <div class="buy-highlight-title">Hỗ trợ từ Mentor</div>
-              <div class="buy-highlight-desc">
-                Kết nối trực tiếp với các chuyên gia trong lĩnh vực của bạn để
-                nhận phản hồi chuyên sâu nhanh chóng.
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- /buy-highlights -->
-      </div>
-      <!-- /buy-container -->
-    </main>
+      toggle.addEventListener('change', async function () {
+        const on = toggle.checked;
+        status.textContent = on ? 'ON' : 'OFF';
+        notice.style.display = on ? 'flex' : 'none';
 
-    <!-- Footer (đồng bộ với index.html) -->
-    <div id="site-footer"></div>
+        const token = window.Auth.getToken();
+        if (!token) return;
 
-    <!-- Scripts đồng bộ với index.html -->
-    <script src="../../js/config.js"></script>
-    <script src="../../js/auth.js"></script>
-    <script src="../../js/nav.js"></script>
-  </body>
+        try {
+          const r = await fetch('/api/auth/dev-premium', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ enable: on })
+          });
+          const d = await r.json();
+          if (!r.ok) {
+            alert(d.error || 'Dev premium toggle failed.');
+            toggle.checked = !on;
+            status.textContent = toggle.checked ? 'ON' : 'OFF';
+            notice.style.display = toggle.checked ? 'flex' : 'none';
+          }
+        } catch {
+          alert('Network error activating dev premium.');
+          toggle.checked = !on;
+          status.textContent = toggle.checked ? 'ON' : 'OFF';
+          notice.style.display = toggle.checked ? 'flex' : 'none';
+        }
+      });
+    });
+  </script>
+</body>
 </html>

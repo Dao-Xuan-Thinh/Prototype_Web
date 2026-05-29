@@ -163,7 +163,11 @@
         });
         const d = await r.json();
         if (!r.ok) { alert(d.error || 'Failed to update username.'); return; }
-        if (d.token) localStorage.setItem('protocol_token', d.token);
+        if (d.token) {
+          // update token in whichever storage the user logged in with
+          if (localStorage.getItem('rg_token')) localStorage.setItem('rg_token', d.token);
+          else sessionStorage.setItem('rg_token', d.token);
+        }
         alert('Username updated! Please log out and back in for changes to take full effect.');
       } catch { alert('Network error.'); }
     });
@@ -200,8 +204,16 @@
   const logoutBtn = document.getElementById('settings-logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', function () {
-      localStorage.removeItem('protocol_avatar_url');
-      if (auth) auth.logout();
+      if (typeof dbShellLogout === 'function') {
+        dbShellLogout();
+      } else {
+        // fallback
+        localStorage.removeItem('rg_token');
+        localStorage.removeItem('rg_user');
+        sessionStorage.removeItem('rg_token');
+        sessionStorage.removeItem('rg_user');
+        window.location.href = '../../pages/auth/login.html';
+      }
     });
   }
 

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile – ResearchGate</title>
+  <link rel="stylesheet" href="../../pages/dashboard/dashboard.css" />
+  <link rel="stylesheet" href="profile.css" />
+</head>
+<body data-active-page="profile">
+
+  <!-- Dashboard shell placeholders -->
+  <div id="db-shell-sidebar"></div>
+
+  <div class="db-main-wrapper">
+    <div id="db-shell-topbar"></div>
+
+    <div class="db-body">
+      <div class="profile-page" id="profile-page">
+
+        <!-- Cover + Avatar row -->
+        <div class="profile-cover">
+          <div class="profile-cover-bg"></div>
+          <div class="profile-identity">
+            <div class="profile-avatar-wrap" id="profile-avatar-wrap">
+              <div class="profile-avatar" id="profile-avatar-display">?</div>
+              <button class="profile-avatar-edit-btn" id="profile-avatar-edit-btn" title="Change avatar" style="display:none">
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                  <path d="M14 3l3 3L7 16H4v-3L14 3z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <input type="file" id="profile-avatar-input" accept="image/*" style="display:none" />
+            </div>
+            <div class="profile-name-block">
+              <h1 class="profile-username" id="profile-username">Loading...</h1>
+              <div class="profile-fullname" id="profile-fullname"></div>
+              <div class="profile-badges" id="profile-badges"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="profile-content">
+
+          <!-- Left column: info + actions -->
+          <aside class="profile-sidebar">
+            <div class="profile-card">
+              <div class="profile-card-row" id="profile-institution-row">
+                <svg class="profile-icon" viewBox="0 0 20 20" fill="none">
+                  <path d="M3 18V9l7-7 7 7v9H3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                  <rect x="7" y="13" width="6" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/>
+                </svg>
+                <span id="profile-institution-text" class="profile-muted">No institution</span>
+              </div>
+              <div class="profile-card-row">
+                <svg class="profile-icon" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6"/>
+                  <path d="M10 7v3l2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+                <span id="profile-joined-text" class="profile-muted">Joined ...</span>
+              </div>
+              <div class="profile-bio-section">
+                <div class="profile-section-label">Bio</div>
+                <p id="profile-bio-text" class="profile-bio-text profile-muted">No bio yet.</p>
+              </div>
+              <div class="profile-tags-section">
+                <div class="profile-section-label">Research Interests</div>
+                <div id="profile-tags-list" class="profile-tags-list"></div>
+              </div>
+            </div>
+
+            <!-- Edit button (own profile only) -->
+            <button id="profile-edit-btn" class="profile-edit-btn" style="display:none" onclick="openEditMode()">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                <path d="M14 3l3 3L7 16H4v-3L14 3z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Edit Profile
+            </button>
+          </aside>
+
+          <!-- Right column: posts -->
+          <main class="profile-main">
+            <div class="profile-tabs">
+              <button class="profile-tab active" data-tab="posts">Forum Posts</button>
+            </div>
+            <div id="profile-posts-list" class="profile-posts-list">
+              <div class="profile-loading">Loading posts...</div>
+            </div>
+          </main>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div id="profile-edit-modal" class="profile-modal-overlay" style="display:none" onclick="closeEditModal(event)">
+    <div class="profile-modal-box" onclick="event.stopPropagation()">
+      <div class="profile-modal-header">
+        <h2>Edit Profile</h2>
+        <button class="profile-modal-close" onclick="closeEditModal()">&#x2715;</button>
+      </div>
+      <div class="profile-modal-body">
+        <label class="profile-form-label">Institution
+          <input type="text" id="edit-institution" class="profile-form-input" placeholder="Your school or organization" />
+        </label>
+        <label class="profile-form-label">Bio
+          <textarea id="edit-bio" class="profile-form-textarea" rows="4" placeholder="Tell others about yourself and your research..."></textarea>
+        </label>
+        <label class="profile-form-label">Research Interests
+          <input type="text" id="edit-tags" class="profile-form-input" placeholder="e.g. Machine Learning, Bioinformatics" />
+          <span class="profile-form-hint">Separate interests with commas</span>
+        </label>
+      </div>
+      <div class="profile-modal-footer">
+        <button class="profile-modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+        <button class="profile-modal-btn-save" onclick="saveProfile()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth compat shim (must run before profile.js) -->
+  <script>
+    window.Auth = {
+      getToken: () => localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token'),
+      getUser: () => {
+        try {
+          const raw = localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user');
+          return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+      }
+    };
+  </script>
+  <script src="profile.js" defer></script>
+  <script src="../../js/dashboard-shell.js" defer></script>
+</body>
+</html>

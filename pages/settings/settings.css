@@ -1,7 +1,20 @@
+/* ── Bridge dashboard.css vars → settings legacy vars ──── */
+:root {
+  --clr-bg:       var(--bg, #f7f7fb);
+  --clr-surface:  #fff;
+  --clr-border:   var(--border, #e5e7eb);
+  --clr-text:     var(--text-dark, #1a1a2e);
+  --clr-muted:    var(--text-light, #9ca3af);
+  --clr-primary:  var(--purple, #6c47ff);
+  --clr-card-hover: #f3f4f6;
+  --radius:       8px;
+  --transition:   0.15s;
+}
+
 /* ── Settings Layout ─────────────────────────────────────── */
 .settings-layout {
   display: flex;
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - var(--topbar-h, 60px));
   background: var(--clr-bg);
 }
 
@@ -13,8 +26,8 @@
   border-right: 1px solid var(--clr-border);
   padding: 32px 0;
   position: sticky;
-  top: 64px;
-  height: calc(100vh - 64px);
+  top: 0;
+  height: calc(100vh - var(--topbar-h, 60px));
   overflow-y: auto;
 }
 
@@ -259,10 +272,31 @@ body.dark .tier-pill { background: #3b2f05; color: #fde68a; }
   transition: font-family 0.2s;
 }
 
+/* ── Save button ─────────────────────────────────────────── */
+.settings-save-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--clr-primary);
+  background: var(--clr-primary);
+  color: #fff;
+  transition: opacity 0.15s;
+}
+.settings-save-btn:hover { opacity: 0.88; }
+
+/* ── Settings coming-soon note inline ─────────────────────── */
+.settings-coming-soon {
+  font-size: 0.75rem;
+  color: var(--clr-muted);
+  margin-left: 8px;
+}
+
 /* ── Danger row ─────────────────────────────────────────── */
 .danger-row .settings-field-label span { color: #ef4444; }
-.btn.danger { border-color: #ef4444; color: #ef4444; }
-.btn.danger:hover { background: #ef4444; color: #fff; }
+.settings-save-btn.danger { border-color: #ef4444; color: #ef4444; }
+.settings-save-btn.danger:hover { background: #ef4444; color: #fff; }
 
 /* ── Mobile ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
