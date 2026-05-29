@@ -121,6 +121,22 @@ const uploadChatFile = multer({
 app.use(cors());
 app.use(express.json());
 
+// --- Request logger ---
+app.use((req, res, next) => {
+  const start = Date.now();
+  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || '-';
+  res.on('finish', () => {
+    const ms = Date.now() - start;
+    const status = res.statusCode;
+    // Skip noisy heartbeat/online polling from log output
+    if (req.originalUrl === '/api/auth/heartbeat' || req.originalUrl === '/api/users/online') return;
+    const color = status >= 500 ? '\x1b[31m' : status >= 400 ? '\x1b[33m' : status >= 300 ? '\x1b[36m' : '\x1b[32m';
+    const reset = '\x1b[0m';
+    console.log(`${color}${status}${reset} ${req.method} ${req.originalUrl} — ${ip} (${ms}ms)`);
+  });
+  next();
+});
+
 const db = new sqlite3.Database("./connects.db");
 
 db.serialize(() => {
@@ -382,7 +398,7 @@ app.post("/api/auth/signup", async (req, res) => {
         const userId = this.lastID;
         // Send verification email (async — don't block response)
         sendVerificationEmail(email, username, code).catch(e => console.error('Email send error:', e));
-
+        console.log(`[Signup] New user: ${username} <${email}> (id:${userId})`);
         res.json({
           userId,
           requiresVerification: true,
@@ -526,6 +542,7 @@ app.post("/api/auth/login", (req, res) => {
         JWT_SECRET,
         { expiresIn: "7d" }
       );
+      console.log(`[Login] ${user.username} (id:${user.id})`);
       res.json({
         token,
         user: { id: user.id, username: user.username, email: user.email, tier: user.tier, role: user.role || "member" },
@@ -558,6 +575,8 @@ app.post("/api/auth/guest", async (req, res) => {
           JWT_SECRET,
           { expiresIn: "10d" }
         );
+        const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || '-';
+        console.log(`[Guest] New guest session: ${username} (id:${id}) from ${ip}`);
         res.json({
           token,
           user: { id, username, email, tier: "member", role: "member", is_guest: true }
@@ -663,6 +682,7 @@ app.post("/api/auth/avatar", requireAuth, uploadAvatar.single("avatar"), (req, r
   const avatarUrl = "/uploads/avatars/" + req.file.filename;
   db.run("UPDATE users SET avatar_url = ? WHERE id = ?", [avatarUrl, req.user.id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
+    console.log(`[Avatar] ${req.user.username} uploaded avatar (${(req.file.size/1024).toFixed(1)} KB)`);
     res.json({ avatar_url: avatarUrl });
   });
 });
@@ -950,6 +970,8 @@ app.post("/api/docs/upload", upload.single("file"), (req, res) => {
     [name, req.file.filename, req.file.originalname, uploader, field, req.file.size, doc_type, univ, description],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
+      const sizeKB = (req.file.size / 1024).toFixed(1);
+      console.log(`[Upload] "${name}" by ${uploader} (${sizeKB} KB, ${doc_type})`);
       res.json({
         id: this.lastID,
         name,
