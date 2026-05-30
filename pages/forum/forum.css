@@ -21,6 +21,29 @@
 .mt-8 { margin-top: 8px; margin-bottom: 8px; }
 
 /* LAYOUT & SEARCH  */
+.db-forum-feed {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.forum-create-bar {
+  background: var(--clr-surface);
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--clr-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.forum-feed-inner {
+  padding: 0 24px 40px;
+  flex: 1;
+}
+
 .forum-layout { 
   display: grid; 
   grid-template-columns: 1fr 320px; 
@@ -33,11 +56,6 @@
 @media (max-width: 800px) { .forum-layout { grid-template-columns: 1fr; } }
 
 .feed-column { width: 100%; min-width: 0; }
-
-.search-top-bar { background: var(--clr-surface); padding: 16px 20px; border-bottom: 1px solid var(--clr-border); display: flex; justify-content: center; position: static; }
-.search-container { display: flex; gap: 12px; width: 100%; max-width: 800px; }
-.search-input { flex: 1; border-radius: 99px !important; padding: 12px 24px !important; background: var(--clr-bg) !important; border: none !important; color: var(--clr-text) !important; }
-.create-btn { border-radius: 99px !important; padding: 0 24px !important; }
 
 /* MODAL */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(2px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: all 0.25s ease; }
@@ -190,3 +208,15 @@ body.dark img.comment-avatar { background: var(--clr-border); border-color: var(
 body.dark .vote-btn.active-up { background: rgba(34, 197, 94, 0.15); color: #4ade80; border-color: rgba(34, 197, 94, 0.4); }
 body.dark .vote-btn.active-down { background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.4); }
 body.dark .premium-badge { background: rgba(234, 179, 8, 0.15); color: #fde047; border-color: rgba(234, 179, 8, 0.3); }
+/* ── Forum Mobile ── */
+@media (max-width: 800px) {
+  .db-forum-feed { overflow-y: unset; }
+  .forum-feed-inner { padding: 0 12px 32px; }
+  .forum-create-bar { padding: 10px 12px; }
+  .post-card { padding: 14px; }
+}
+@media (max-width: 480px) {
+  .forum-feed-inner { padding: 0 8px 24px; }
+  .post-card-actions { flex-wrap: wrap; gap: 6px; }
+  .tag-badge { font-size: 0.72rem; padding: 2px 8px; }
+}

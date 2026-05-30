@@ -1067,10 +1067,15 @@ async function renderPosts() {
   renderWidgets();
 }
 
-function renderWidgets() {
-  const trendingContainer = document.getElementById('trendingPostsWidget');
-  const pollsContainer = document.getElementById('activePollsWidget');
-  if(trendingContainer) {
+// Expose global forum search for context-aware navbar search
+window.forumSearch = async function(query) {
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) searchInput.value = query;
+  if (posts.length === 0) await fetchPosts();
+  renderPosts();
+};
+
+
     const trending = [...posts].filter(p => p.type === 'post').sort((a, b) => (b.upvotes + (Array.isArray(b.comments)?b.comments.length:0)) - (a.upvotes + (Array.isArray(a.comments)?a.comments.length:0))).slice(0, 3);
     trendingContainer.innerHTML = trending.length ? trending.map(p => `<div class="widget-item"><div style="font-size:1.2rem;"></div><div><div class="widget-item-title" onclick="openThread(null, ${p.id})">${p.title}</div><div class="widget-item-meta">${p.upvotes} Votes • By ${p.author}</div></div></div>`).join('') : '<div style="font-size:0.8rem; color:#94a3b8;">No data yet</div>';
   }

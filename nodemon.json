@@ -1,0 +1,6 @@
+{
+  "watch": ["server.js", "js/", "pages/", "css/"],
+  "ext": "js,json",
+  "ignore": ["node_modules/", "uploads/", "connects.db", "*.db-journal"],
+  "delay": 500
+}

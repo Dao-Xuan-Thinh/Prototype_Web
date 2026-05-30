@@ -116,9 +116,9 @@
 
   const topbarHTML = `
     <header class="db-topbar" id="db-topbar">
-      <div class="db-topbar-search db-topbar-search-disabled" title="Search coming soon">
+      <div class="db-topbar-search" id="db-shell-search-wrap">
         <svg class="db-search-icon" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="#9ca3af" stroke-width="1.8"/><path d="M14 14l3 3" stroke="#9ca3af" stroke-width="1.8" stroke-linecap="round"/></svg>
-        <input type="text" placeholder="Search coming soon..." class="db-topbar-input" disabled />
+        <input type="text" id="db-shell-search-input" placeholder="Search…" class="db-topbar-input" oninput="dbShellSearch(this.value)" />
       </div>
       <div class="db-topbar-right">
         <span class="db-premium-badge">FREE</span>
@@ -176,6 +176,28 @@
     if (topbarRoot) topbarRoot.outerHTML = topbarHTML;
 
     document.body.insertAdjacentHTML('beforeend', logoutModalHTML);
+    // Mobile sidebar overlay
+    document.body.insertAdjacentHTML('beforeend', '<div class="db-sidebar-overlay" id="db-sidebar-overlay" onclick="dbShellCloseSidebar()"></div>');
+
+    // Inject hamburger into topbar
+    const topbar = document.getElementById('db-topbar');
+    if (topbar) {
+      const ham = document.createElement('button');
+      ham.className = 'db-hamburger';
+      ham.title = 'Open menu';
+      ham.setAttribute('aria-label', 'Open sidebar');
+      ham.innerHTML = '<svg viewBox="0 0 20 20" fill="none" width="18" height="18"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+      ham.onclick = () => dbShellToggleSidebar();
+      topbar.insertBefore(ham, topbar.firstChild);
+    }
+
+    // Update search placeholder based on page context
+    const ctx = document.body.dataset.searchContext || '';
+    const searchInput = document.getElementById('db-shell-search-input');
+    if (searchInput) {
+      const placeholders = { forum: 'Search forum posts…', documents: 'Search documents…' };
+      searchInput.placeholder = placeholders[ctx] || 'Search…';
+    }
 
     // Click outside to close dropdown
     document.addEventListener('click', () => {
@@ -199,6 +221,34 @@
     e.stopPropagation();
     const wrap = document.getElementById('db-shell-user-wrap');
     if (wrap) wrap.classList.toggle('db-dropdown-open');
+  };
+
+  window.dbShellToggleSidebar = function() {
+    const sidebar = document.querySelector('.db-sidebar');
+    const overlay = document.getElementById('db-sidebar-overlay');
+    if (!sidebar) return;
+    sidebar.classList.toggle('db-sidebar-open');
+    if (overlay) overlay.classList.toggle('active', sidebar.classList.contains('db-sidebar-open'));
+  };
+
+  window.dbShellCloseSidebar = function() {
+    const sidebar = document.querySelector('.db-sidebar');
+    const overlay = document.getElementById('db-sidebar-overlay');
+    if (sidebar) sidebar.classList.remove('db-sidebar-open');
+    if (overlay) overlay.classList.remove('active');
+  };
+
+  // Context-aware search (debounced 300ms)
+  let _searchTimer = null;
+  window.dbShellSearch = function(query) {
+    clearTimeout(_searchTimer);
+    _searchTimer = setTimeout(() => {
+      const ctx = document.body.dataset.searchContext || '';
+      if (ctx === 'forum' && typeof window.forumSearch === 'function') {
+        window.forumSearch(query);
+      }
+      // future contexts: 'documents', 'profile', etc.
+    }, 300);
   };
   window.dbShellLogout = function() {
     const wrap = document.getElementById('db-shell-user-wrap');

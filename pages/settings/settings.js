@@ -85,10 +85,9 @@
     const roleEl = document.getElementById('settings-role-badge');
     const tierEl = document.getElementById('settings-tier-badge');
     const avatarImg = document.getElementById('settings-avatar-img');
-    const navAvatarCached = localStorage.getItem('protocol_avatar_url');
     const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=5b85f6&color=fff`;
 
-    if (avatarImg) avatarImg.src = navAvatarCached || defaultAvatar;
+    if (avatarImg) avatarImg.src = user.avatar_url || defaultAvatar;
     if (usernameInput) usernameInput.value = user.username || '';
     if (emailInput) emailInput.value = user.email || '';
 
@@ -105,7 +104,11 @@
         if (tierEl) tierEl.textContent = u.tier === 'premium' ? '⭐ Premium' : '🔓 Free';
         if (u.avatar_url && avatarImg) {
           avatarImg.src = u.avatar_url;
-          localStorage.setItem('protocol_avatar_url', u.avatar_url);
+          // Update cached user object in storage
+          const stored = JSON.parse(localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user') || '{}');
+          stored.avatar_url = u.avatar_url;
+          if (localStorage.getItem('rg_user')) localStorage.setItem('rg_user', JSON.stringify(stored));
+          else sessionStorage.setItem('rg_user', JSON.stringify(stored));
         }
       }
     } catch {}
@@ -134,9 +137,18 @@
         if (xhr.status === 200) {
           const d = JSON.parse(xhr.responseText);
           if (d.avatar_url) {
-            localStorage.setItem('protocol_avatar_url', d.avatar_url);
             const avatarImg = document.getElementById('settings-avatar-img');
             if (avatarImg) avatarImg.src = d.avatar_url;
+            // Update rg_user in the correct store
+            const raw = localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user');
+            if (raw) {
+              try {
+                const u = JSON.parse(raw);
+                u.avatar_url = d.avatar_url;
+                if (localStorage.getItem('rg_user')) localStorage.setItem('rg_user', JSON.stringify(u));
+                else sessionStorage.setItem('rg_user', JSON.stringify(u));
+              } catch {}
+            }
           }
         } else {
           alert('Avatar upload failed.');

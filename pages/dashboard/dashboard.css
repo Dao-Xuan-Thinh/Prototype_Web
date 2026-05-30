@@ -553,6 +553,61 @@ body::before {
   .db-hero-actions { flex-wrap: wrap; }
 }
 
+/* ─── Mobile 768px ─── */
+@media (max-width: 768px) {
+  :root { --sidebar-w: 0px; }
+  .db-sidebar {
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    width: 220px !important;
+    z-index: 200;
+  }
+  .db-sidebar.db-sidebar-open {
+    transform: translateX(0);
+  }
+  .db-sidebar.db-sidebar-open .db-sidebar-brand,
+  .db-sidebar.db-sidebar-open .db-nav-section-label,
+  .db-sidebar.db-sidebar-open .db-nav-item span,
+  .db-sidebar.db-sidebar-open .db-sidebar-upgrade .db-upgrade-text { display: block !important; }
+  .db-sidebar.db-sidebar-open .db-nav-item { justify-content: flex-start; padding: 10px 12px; gap: 10px; }
+  .db-main-wrapper { margin-left: 0; }
+  .db-hamburger { display: flex !important; }
+  .db-sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 199;
+  }
+  .db-sidebar-overlay.active { display: block; }
+  .db-right-panel { display: none; }
+  .db-topbar-search { max-width: 100%; flex: 1; }
+  .db-user-name { display: none; }
+  .db-feed { padding: 12px; }
+}
+
+/* ─── Mobile 480px ─── */
+@media (max-width: 480px) {
+  .db-hero { padding: 20px 16px; }
+  .db-hero-title { font-size: 1.3rem; }
+  .db-section-title { font-size: .88rem; }
+  .db-panel-card-title { font-size: .82rem; }
+  .db-cards-row { grid-template-columns: 1fr; gap: 10px; }
+  .db-topbar { padding: 0 10px; gap: 8px; }
+}
+
+/* Hamburger button (hidden on desktop) */
+.db-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 36px; height: 36px;
+  cursor: pointer;
+  color: var(--text-mid);
+  flex-shrink: 0;
+}
+.db-hamburger:hover { background: var(--purple-light); color: var(--purple); border-color: var(--purple); }
+
 /* =============  DISABLED / GRAYED OUT STATES  ============= */
 .db-nav-disabled {
   opacity: 0.38;
@@ -932,4 +987,106 @@ body::before {
 .db-panel-expanded .db-active-members-live {
   max-height: 500px;
   overflow-y: auto;
+}
+
+/* ============= DISCORD-STYLE LIST (expanded) ============= */
+.db-panel-discord-view {
+  overflow-y: auto;
+  max-height: 520px;
+}
+.db-discord-group-label {
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-light);
+  padding: 6px 4px 8px;
+}
+.db-discord-list { display: flex; flex-direction: column; gap: 2px; }
+.db-discord-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .12s;
+}
+.db-discord-row:hover { background: var(--bg); }
+.db-discord-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: .82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.db-discord-info { flex: 1; min-width: 0; }
+.db-discord-name {
+  font-size: .84rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.db-discord-role { font-size: .72rem; color: var(--text-light); }
+.db-discord-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+}
+.db-discord-empty { font-size: .8rem; color: var(--text-light); padding: 12px 4px; }
+
+/* ============= RIGHT PANEL DRAG + COLLAPSE ============= */
+.db-right-panel {
+  position: relative;
+}
+.db-rp-drag-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 10;
+  background: transparent;
+  transition: background .15s;
+}
+.db-rp-drag-handle:hover { background: var(--purple); opacity: .4; }
+
+.db-rp-collapse-btn {
+  position: absolute;
+  top: 14px;
+  left: -14px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-mid);
+  z-index: 20;
+  transition: background .15s, color .15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.1);
+}
+.db-rp-collapse-btn:hover { background: var(--purple); color: #fff; border-color: var(--purple); }
+
+.db-rp-collapsed {
+  overflow: hidden;
+  width: 0 !important;
+  padding: 0 !important;
+  border-left: none;
+}
+.db-rp-collapsed .db-rp-collapse-btn {
+  left: 4px;
 }

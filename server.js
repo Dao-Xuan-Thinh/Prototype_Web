@@ -1119,6 +1119,21 @@ app.post("/api/forum/posts", requireAuth, (req, res) => {
   });
 });
 
+app.get("/api/forum/posts/featured", (req, res) => {
+  db.all(
+    `SELECT id, title, tags, upvotes, is_pinned, last_active,
+      (SELECT COUNT(*) FROM forum_comments WHERE post_id = fp.id) AS comment_count
+     FROM forum_posts fp
+     ORDER BY fp.is_pinned DESC, fp.upvotes DESC, fp.last_active DESC
+     LIMIT 5`,
+    [],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows.map(r => ({ ...r, tags: JSON.parse(r.tags || "[]") })));
+    }
+  );
+});
+
 app.get("/api/forum/posts/:id", (req, res) => {
   db.get("SELECT * FROM forum_posts WHERE id = ?", [req.params.id], (err, post) => {
     if (err || !post) return res.status(404).json({ error: "Post not found" });

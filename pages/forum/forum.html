@@ -7,27 +7,26 @@
   <link rel="stylesheet" href="../dashboard/dashboard.css" />
   <link rel="stylesheet" href="forum.css" />
 </head>
-<body data-active-page="forum">
+<body data-active-page="forum" data-search-context="forum">
 
   <div id="db-shell-sidebar"></div>
 
   <div class="db-main-wrapper">
     <div id="db-shell-topbar"></div>
 
-    <div class="db-body" style="padding: 0; overflow-y: auto;">
+    <div class="db-body" style="padding: 0; overflow: hidden;">
 
-      <!-- Search + Create -->
-      <div class="search-top-bar">
-        <div class="search-container">
-          <input type="text" id="searchInput" class="forum-input search-input" placeholder="Search discussions (e.g. AI, Marketing...)" oninput="renderPosts()">
+      <!-- Forum feed column -->
+      <div class="db-forum-feed">
+
+        <!-- Create bar (replaces old search-top-bar) -->
+        <div class="forum-create-bar">
+          <input type="text" id="searchInput" style="display:none" aria-hidden="true">
           <button class="forum-btn primary create-btn" onclick="openCreateModal()">New Post</button>
         </div>
-      </div>
 
-      <!-- Forum layout: feed + forum sidebar -->
-      <main class="forum-layout">
-
-        <div class="feed-column">
+        <!-- Forum feed -->
+        <div class="forum-feed-inner">
 
           <div class="filter-bar" id="filterBar">
             <div id="filterTagsContainer" class="flex-row gap-8 wrap"></div>
@@ -62,38 +61,50 @@
             </div>
           </div>
 
-        </div><!-- /feed-column -->
+        </div><!-- /forum-feed-inner -->
+      </div><!-- /db-forum-feed -->
 
-        <!-- Forum sidebar (profile widget + trending + polls) -->
-        <div class="sidebar-column">
-          <div class="forum-box profile-widget" style="text-align: center; background: var(--clr-surface); border: 1px solid var(--clr-border); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-            <img id="sysAvatarPreview" src="" alt="Avatar" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid var(--clr-border);">
-            <h3 id="sysUserName" style="margin-bottom: 4px; font-size: 1.1rem;">User</h3>
-            <div id="premiumStatusText" style="font-size: 0.85rem; color: var(--clr-muted); margin-bottom: 12px;">Free account</div>
-            <div class="flex-row gap-8" style="justify-content: center;">
-              <a href="../buy/buy.html" id="buyPremiumBtn" class="forum-btn small premium" style="text-decoration: none; display: inline-block;">Go Premium</a>
+      <!-- Right panel (shared with dashboard) -->
+      <aside class="db-right-panel" id="db-forum-right-panel">
+        <div class="db-rp-drag-handle" id="db-forum-rp-drag-handle"></div>
+        <button class="db-rp-collapse-btn" id="db-forum-rp-collapse-btn" title="Collapse sidebar" onclick="toggleForumRightPanel()">
+          <svg viewBox="0 0 20 20" fill="none" width="14" height="14"><path d="M13 4l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+
+        <!-- Featured Discussions -->
+        <div class="db-panel-card" id="forum-panel-discussions">
+          <div class="db-panel-card-header">
+            <span class="db-panel-card-title">Featured Discussions</span>
+          </div>
+          <div id="forum-discussions-live" class="db-discussion-list">
+            <div class="db-empty-state db-empty-state-sm">
+              <div class="db-empty-title" style="font-size:.82rem">Loading...</div>
             </div>
           </div>
+        </div>
 
-          <div class="widget-box">
-            <div class="widget-header">
-              <h4>Featured Discussions</h4>
-              <span class="view-all" onclick="filterOnly('post')">See all</span>
-            </div>
-            <div id="trendingPostsWidget" class="widget-content"></div>
+        <!-- Online Mentors -->
+        <div class="db-panel-card" id="forum-panel-mentors">
+          <div class="db-panel-card-header">
+            <span class="db-panel-card-title">Online Mentors</span>
           </div>
-
-          <div class="widget-box">
-            <div class="widget-header">
-              <h4>Active Polls</h4>
-              <span class="view-all" onclick="filterOnly('poll')">See all</span>
-            </div>
-            <div id="activePollsWidget" class="widget-content"></div>
+          <div class="db-mentor-list-live" id="forum-mentors-live"></div>
+          <div class="db-mentor-empty db-empty-state db-empty-state-sm" style="display:none">
+            <div class="db-empty-title">No mentors online right now</div>
           </div>
-        </div><!-- /sidebar-column -->
+        </div>
 
-      </main>
-    </div>
+        <!-- Active Members -->
+        <div class="db-panel-card" id="forum-panel-members">
+          <div class="db-panel-card-header">
+            <span class="db-panel-card-title">Active Members</span>
+          </div>
+          <div class="db-active-members-live" id="forum-members-live"></div>
+          <div class="db-member-online-label" id="forum-member-label">Connecting...</div>
+        </div>
+
+      </aside>
+    </div><!-- .db-body -->
   </div>
 
   <!-- Create Post Modal -->
@@ -167,6 +178,128 @@
   <script>
     // 5-second real-time polling for posts (no white blink — updates in-place via forum.js renderPosts)
     document.addEventListener('DOMContentLoaded', function () {
+      // Forum right panel: online users + featured discussions
+      function getToken() { return localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token'); }
+
+      async function forumFetchOnline() {
+        const token = getToken();
+        if (!token) return;
+        try {
+          const res = await fetch('/api/users/online', { headers: { Authorization: 'Bearer ' + token } });
+          if (!res.ok) return;
+          const users = await res.json();
+          // Members
+          const mList = document.getElementById('forum-members-live');
+          const mLabel = document.getElementById('forum-member-label');
+          if (mList) {
+            const existing = new Set([...mList.querySelectorAll('.db-live-member')].map(e => e.dataset.uid));
+            const nowIds = new Set(users.map(u => String(u.id)));
+            mList.querySelectorAll('.db-live-member').forEach(el => {
+              if (!nowIds.has(el.dataset.uid)) { el.classList.add('db-live-member-out'); setTimeout(() => el.remove(), 300); }
+            });
+            users.slice(0, 24).forEach(u => {
+              if (!existing.has(String(u.id))) {
+                const el = document.createElement('div');
+                el.className = 'db-live-member';
+                el.dataset.uid = String(u.id);
+                el.title = u.username;
+                el.textContent = (u.username || '?').charAt(0).toUpperCase();
+                mList.appendChild(el);
+                requestAnimationFrame(() => el.classList.add('db-live-member-in'));
+              }
+            });
+          }
+          if (mLabel) mLabel.textContent = users.length === 0 ? 'No members online yet' : users.length + (users.length === 1 ? ' researcher online' : ' researchers online');
+          // Mentors
+          const mentors = users.filter(u => u.role === 'mentor');
+          const mtList = document.getElementById('forum-mentors-live');
+          const mtEmpty = document.querySelector('#forum-panel-mentors .db-mentor-empty');
+          if (mtList) {
+            const existing = new Set([...mtList.querySelectorAll('.db-mentor-item')].map(e => e.dataset.uid));
+            const nowIds = new Set(mentors.map(u => String(u.id)));
+            mtList.querySelectorAll('.db-mentor-item').forEach(el => {
+              if (!nowIds.has(el.dataset.uid)) { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
+            });
+            mentors.forEach(u => {
+              if (!existing.has(String(u.id))) {
+                const el = document.createElement('div');
+                el.className = 'db-mentor-item';
+                el.dataset.uid = String(u.id);
+                el.style.opacity = '0';
+                el.innerHTML = `<div class="db-mentor-avatar">${(u.username||'?').charAt(0).toUpperCase()}</div><div class="db-mentor-info"><div class="db-mentor-name">${u.username}</div><div class="db-mentor-field">Mentor</div></div><div class="db-mentor-dot db-dot-online"></div>`;
+                mtList.appendChild(el);
+                requestAnimationFrame(() => { el.style.opacity='1'; el.style.transition='opacity .3s'; });
+              }
+            });
+            if (mtEmpty) mtEmpty.style.display = mentors.length === 0 ? 'flex' : 'none';
+          }
+        } catch {}
+      }
+
+      async function forumFetchDiscussions() {
+        const token = getToken();
+        if (!token) return;
+        try {
+          const res = await fetch('/api/forum/posts/featured', { headers: { Authorization: 'Bearer ' + token } });
+          if (!res.ok) return;
+          const posts = await res.json();
+          const el = document.getElementById('forum-discussions-live');
+          if (!el) return;
+          if (!posts || posts.length === 0) {
+            el.innerHTML = '<div class="db-empty-state db-empty-state-sm"><div class="db-empty-title" style="font-size:.82rem">No discussions yet</div></div>';
+            return;
+          }
+          const formatRel = dt => {
+            if (!dt) return 'some time ago';
+            const d = (Date.now() - new Date(dt).getTime()) / 1000;
+            if (d < 60) return 'just now';
+            if (d < 3600) return Math.floor(d/60) + 'm ago';
+            if (d < 86400) return Math.floor(d/3600) + 'h ago';
+            return Math.floor(d/86400) + 'd ago';
+          };
+          el.innerHTML = posts.map(p => {
+            const tag = (p.tags && p.tags[0]) || 'General';
+            return `<div class="db-discussion-item" style="cursor:pointer" onclick="openThread(null,${p.id})">
+              <div class="db-discussion-tag">${tag}</div>
+              <div class="db-discussion-text">${String(p.title).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+              <div class="db-discussion-meta">${p.comment_count||0} replies · ${formatRel(p.last_active)}</div>
+            </div>`;
+          }).join('');
+        } catch {}
+      }
+
+      // Right panel drag + collapse (same as dashboard)
+      (function() {
+        const panel = document.getElementById('db-forum-right-panel');
+        const handle = document.getElementById('db-forum-rp-drag-handle');
+        if (!panel || !handle) return;
+        const W_KEY = 'rg_sidebar_width', C_KEY = 'rg_forum_sidebar_collapsed';
+        const savedW = parseInt(localStorage.getItem(W_KEY)) || 290;
+        const collapsed = localStorage.getItem(C_KEY) === 'true';
+        panel.style.width = savedW + 'px';
+        if (collapsed) panel.classList.add('db-rp-collapsed');
+        let dragging = false, startX = 0, startW = 0;
+        handle.addEventListener('mousedown', e => { dragging = true; startX = e.clientX; startW = panel.offsetWidth; document.body.style.userSelect = 'none'; document.body.style.cursor = 'ew-resize'; e.preventDefault(); });
+        document.addEventListener('mousemove', e => { if (!dragging) return; const d = startX - e.clientX; panel.style.width = Math.min(480, Math.max(200, startW + d)) + 'px'; });
+        document.addEventListener('mouseup', () => { if (!dragging) return; dragging = false; document.body.style.userSelect = ''; document.body.style.cursor = ''; localStorage.setItem(W_KEY, panel.offsetWidth); });
+      })();
+
+      window.toggleForumRightPanel = function() {
+        const panel = document.getElementById('db-forum-right-panel');
+        const btn = document.getElementById('db-forum-rp-collapse-btn');
+        if (!panel) return;
+        const c = panel.classList.toggle('db-rp-collapsed');
+        localStorage.setItem('rg_forum_sidebar_collapsed', String(c));
+        if (btn) btn.innerHTML = c
+          ? '<svg viewBox="0 0 20 20" fill="none" width="14" height="14"><path d="M7 4l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+          : '<svg viewBox="0 0 20 20" fill="none" width="14" height="14"><path d="M13 4l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      };
+
+      forumFetchOnline();
+      forumFetchDiscussions();
+      setInterval(() => { forumFetchOnline(); forumFetchDiscussions(); }, 5000);
+
+      // Post polling (no white blink)
       let pollTimer = null;
       function schedulePoll() {
         pollTimer = setInterval(async function () {
@@ -176,7 +309,6 @@
           }
         }, 5000);
       }
-      // Wait for forum.js to init
       setTimeout(schedulePoll, 2000);
     });
   </script>

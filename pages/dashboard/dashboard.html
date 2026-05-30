@@ -243,18 +243,22 @@
       </main>
 
       <!-- RIGHT PANEL -->
-      <aside class="db-right-panel">
+      <aside class="db-right-panel" id="db-right-panel">
+        <div class="db-rp-drag-handle" id="db-rp-drag-handle"></div>
+        <button class="db-rp-collapse-btn" id="db-rp-collapse-btn" title="Collapse sidebar" onclick="toggleRightPanel()">
+          <svg viewBox="0 0 20 20" fill="none" width="14" height="14"><path d="M13 4l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
 
         <!-- Featured Discussions -->
         <div class="db-panel-card" id="panel-discussions">
           <div class="db-panel-card-header">
             <span class="db-panel-card-title">Featured Discussions</span>
-            <span class="db-coming-soon-tag">Soon</span>
+            <a href="../forum/forum.html" class="db-section-link">View all</a>
           </div>
-          <div class="db-empty-state db-empty-state-sm">
-            <svg class="db-empty-icon" viewBox="0 0 48 48" fill="none"><rect x="6" y="10" width="36" height="22" rx="4" stroke="currentColor" stroke-width="2"/><path d="M14 38l4-6h12l4 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round" opacity=".4"/><path d="M14 20h20M14 26h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/></svg>
-            <div class="db-empty-title">No discussions yet</div>
-            <div class="db-empty-sub">Forum is coming soon.</div>
+          <div id="db-discussions-live" class="db-discussion-list">
+            <div class="db-empty-state db-empty-state-sm">
+              <div class="db-empty-title" style="font-size:.82rem">Loading...</div>
+            </div>
           </div>
         </div>
 
@@ -277,10 +281,18 @@
             <span class="db-panel-card-title">Online Mentors</span>
             <button class="db-panel-expand-btn" onclick="expandPanel('panel-mentors')" title="See all">Expand</button>
           </div>
-          <div class="db-mentor-list-live" id="db-mentors-live"></div>
-          <div class="db-mentor-empty db-empty-state db-empty-state-sm" style="display:none">
-            <div class="db-empty-title">No mentors online right now</div>
-            <div class="db-empty-sub">Check back later.</div>
+          <!-- compact view -->
+          <div class="db-panel-compact-view">
+            <div class="db-mentor-list-live" id="db-mentors-live"></div>
+            <div class="db-mentor-empty db-empty-state db-empty-state-sm" style="display:none">
+              <div class="db-empty-title">No mentors online right now</div>
+              <div class="db-empty-sub">Check back later.</div>
+            </div>
+          </div>
+          <!-- discord-style expanded view -->
+          <div class="db-panel-discord-view" style="display:none">
+            <div class="db-discord-group-label">— Mentors Online —</div>
+            <div class="db-discord-list" id="db-mentors-discord"></div>
           </div>
           <button class="db-panel-collapse-btn" onclick="collapsePanel('panel-mentors')" style="display:none">Show less</button>
         </div>
@@ -291,8 +303,16 @@
             <span class="db-panel-card-title">Active Members</span>
             <button class="db-panel-expand-btn" onclick="expandPanel('panel-members')" title="See all">Explore</button>
           </div>
-          <div class="db-active-members-live" id="db-members-live"></div>
-          <div class="db-member-online-label" id="db-member-label">Connecting...</div>
+          <!-- compact view -->
+          <div class="db-panel-compact-view">
+            <div class="db-active-members-live" id="db-members-live"></div>
+            <div class="db-member-online-label" id="db-member-label">Connecting...</div>
+          </div>
+          <!-- discord-style expanded view -->
+          <div class="db-panel-discord-view" style="display:none">
+            <div class="db-discord-group-label">— Members Online —</div>
+            <div class="db-discord-list" id="db-members-discord"></div>
+          </div>
           <button class="db-panel-collapse-btn" onclick="collapsePanel('panel-members')" style="display:none">Show less</button>
         </div>
 
@@ -397,6 +417,7 @@
     }
 
     function renderOnlineMembers(users) {
+      _lastMembers = users;
       const list = document.getElementById('db-members-live');
       const label = document.getElementById('db-member-label');
       if (!list) return;
@@ -430,9 +451,14 @@
           ? 'No members online yet'
           : users.length + (users.length === 1 ? ' researcher online' : ' researchers online');
       }
+
+      // Refresh discord view if expanded
+      const panel = document.getElementById('panel-members');
+      if (panel && panel.classList.contains('db-panel-expanded')) renderDiscordMembers(users);
     }
 
     function renderOnlineMentors(mentors) {
+      _lastMentors = mentors;
       const list = document.getElementById('db-mentors-live');
       const empty = document.querySelector('#panel-mentors .db-mentor-empty');
       if (!list) return;
@@ -467,9 +493,13 @@
       });
 
       if (empty) empty.style.display = mentors.length === 0 ? 'flex' : 'none';
+
+      // Refresh discord view if expanded
+      const panel = document.getElementById('panel-mentors');
+      if (panel && panel.classList.contains('db-panel-expanded')) renderDiscordMentors(mentors);
     }
 
-    // Panel expand / collapse (hides other right-panel cards)
+    // Panel expand / collapse (hides other right-panel cards, switches to Discord-style list)
     function expandPanel(panelId) {
       const panel = document.getElementById(panelId);
       if (!panel) return;
@@ -478,6 +508,14 @@
         if (c !== panel) c.classList.add('db-panel-hidden');
       });
       panel.classList.add('db-panel-expanded');
+      // Switch views
+      const compact = panel.querySelector('.db-panel-compact-view');
+      const discord = panel.querySelector('.db-panel-discord-view');
+      if (compact) compact.style.display = 'none';
+      if (discord) discord.style.display = '';
+      // Populate discord list with current data
+      if (panelId === 'panel-mentors') renderDiscordMentors(_lastMentors);
+      if (panelId === 'panel-members') renderDiscordMembers(_lastMembers);
       const expandBtn = panel.querySelector('.db-panel-expand-btn');
       const collapseBtn = panel.querySelector('.db-panel-collapse-btn');
       if (expandBtn) expandBtn.style.display = 'none';
@@ -489,16 +527,168 @@
       const rightPanel = panel.closest('.db-right-panel');
       rightPanel.querySelectorAll('.db-panel-card').forEach(c => c.classList.remove('db-panel-hidden'));
       panel.classList.remove('db-panel-expanded');
+      const compact = panel.querySelector('.db-panel-compact-view');
+      const discord = panel.querySelector('.db-panel-discord-view');
+      if (compact) compact.style.display = '';
+      if (discord) discord.style.display = 'none';
       const expandBtn = panel.querySelector('.db-panel-expand-btn');
       const collapseBtn = panel.querySelector('.db-panel-collapse-btn');
       if (expandBtn) expandBtn.style.display = '';
       if (collapseBtn) collapseBtn.style.display = 'none';
     }
 
+    // Cache last fetched user lists for discord-view re-render
+    let _lastMembers = [];
+    let _lastMentors = [];
+
+    function renderDiscordMembers(users) {
+      const list = document.getElementById('db-members-discord');
+      if (!list) return;
+      list.innerHTML = users.map(u => {
+        const letter = (u.username || '?').charAt(0).toUpperCase();
+        const colors = ['#6c47ff','#059669','#2563eb','#dc2626','#f59e0b','#ec4899','#10b981'];
+        const color = colors[u.id % colors.length];
+        return `<div class="db-discord-row">
+          <div class="db-discord-avatar" style="background:${color}">${letter}</div>
+          <div class="db-discord-info">
+            <div class="db-discord-name">${u.username || 'Unknown'}</div>
+            <div class="db-discord-role">${u.role || 'member'}</div>
+          </div>
+          <div class="db-discord-dot"></div>
+        </div>`;
+      }).join('') || '<div class="db-discord-empty">No members online</div>';
+    }
+
+    function renderDiscordMentors(mentors) {
+      const list = document.getElementById('db-mentors-discord');
+      if (!list) return;
+      list.innerHTML = mentors.map(u => {
+        const letter = (u.username || '?').charAt(0).toUpperCase();
+        const colors = ['#6c47ff','#059669','#2563eb','#dc2626','#f59e0b','#ec4899','#10b981'];
+        const color = colors[u.id % colors.length];
+        return `<div class="db-discord-row">
+          <div class="db-discord-avatar" style="background:${color}">${letter}</div>
+          <div class="db-discord-info">
+            <div class="db-discord-name">${u.username || 'Unknown'}</div>
+            <div class="db-discord-role">Mentor · ${u.field || 'Research'}</div>
+          </div>
+          <div class="db-discord-dot"></div>
+        </div>`;
+      }).join('') || '<div class="db-discord-empty">No mentors online</div>';
+    }
+
+    // ---- Featured Discussions ----
+    async function fetchFeaturedDiscussions() {
+      const token = getToken();
+      if (!token) return;
+      try {
+        const res = await fetch('/api/forum/posts/featured', {
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        if (!res.ok) return;
+        const posts = await res.json();
+        renderFeaturedDiscussions(posts);
+      } catch {}
+    }
+
+    function renderFeaturedDiscussions(posts) {
+      const el = document.getElementById('db-discussions-live');
+      if (!el) return;
+      if (!posts || posts.length === 0) {
+        el.innerHTML = `<div class="db-empty-state db-empty-state-sm">
+          <div class="db-empty-title" style="font-size:.82rem">No discussions yet</div>
+          <div class="db-empty-sub">Be the first to post in the forum!</div>
+        </div>`;
+        return;
+      }
+      el.innerHTML = posts.map(p => {
+        const tag = (p.tags && p.tags[0]) || 'General';
+        const timeAgo = formatRelTime(p.last_active);
+        return `<div class="db-discussion-item" style="cursor:pointer" onclick="window.location.href='../forum/forum.html'">
+          <div class="db-discussion-tag">${tag}</div>
+          <div class="db-discussion-text">${escHtml(p.title)}</div>
+          <div class="db-discussion-meta">${p.comment_count || 0} replies · ${timeAgo}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function formatRelTime(dt) {
+      if (!dt) return 'some time ago';
+      const diff = (Date.now() - new Date(dt).getTime()) / 1000;
+      if (diff < 60) return 'just now';
+      if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+      if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+      return Math.floor(diff/86400) + 'd ago';
+    }
+
     // Kick off heartbeat cycle
     sendHeartbeat();
     fetchOnlineUsers();
-    setInterval(() => { sendHeartbeat(); fetchOnlineUsers(); }, 5000);
+    fetchFeaturedDiscussions();
+    setInterval(() => { sendHeartbeat(); fetchOnlineUsers(); fetchFeaturedDiscussions(); }, 5000);
+
+    // ---- Right panel drag-to-resize + collapse ----
+    (function initRightPanel() {
+      const panel = document.getElementById('db-right-panel');
+      const handle = document.getElementById('db-rp-drag-handle');
+      const collapseBtn = document.getElementById('db-rp-collapse-btn');
+      if (!panel || !handle) return;
+
+      const COLLAPSED_KEY = 'rg_sidebar_collapsed';
+      const WIDTH_KEY = 'rg_sidebar_width';
+      const MIN_W = 200, MAX_W = 480;
+
+      // Restore state
+      const savedW = parseInt(localStorage.getItem(WIDTH_KEY)) || 290;
+      const collapsed = localStorage.getItem(COLLAPSED_KEY) === 'true';
+      panel.style.width = savedW + 'px';
+      if (collapsed) {
+        panel.classList.add('db-rp-collapsed');
+        if (collapseBtn) collapseBtn.innerHTML = '<svg viewBox="0 0 20 20" fill="none" width="14" height="14"><path d="M7 4l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      }
+
+      // Drag resize
+      let dragging = false, startX = 0, startW = 0;
+      handle.addEventListener('mousedown', e => {
+        dragging = true;
+        startX = e.clientX;
+        startW = panel.offsetWidth;
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'ew-resize';
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        const delta = startX - e.clientX;
+        const newW = Math.min(MAX_W, Math.max(MIN_W, startW + delta));
+        panel.style.width = newW + 'px';
+        document.documentElement.style.setProperty('--right-w', newW + 'px');
+      });
+      document.addEventListener('mouseup', () => {
+        if (!dragging) return;
+        dragging = false;
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+        localStorage.setItem(WIDTH_KEY, panel.offsetWidth);
+      });
+    })();
+
+    function toggleRightPanel() {
+      const panel = document.getElementById('db-right-panel');
+      const btn = document.getElementById('db-rp-collapse-btn');
+      if (!panel) return;
+      const collapsed = panel.classList.toggle('db-rp-collapsed');
+      localStorage.setItem('rg_sidebar_collapsed', String(collapsed));
+      if (btn) {
+        btn.innerHTML = collapsed
+          ? '<svg viewBox="0 0 20 20" fill="none" width="14" height="14"><path d="M7 4l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+          : '<svg viewBox="0 0 20 20" fill="none" width="14" height="14"><path d="M13 4l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      }
+    }
 
     // ---- Demo Mode ----
     let demoOn = false;

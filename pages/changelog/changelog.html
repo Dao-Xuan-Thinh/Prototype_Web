@@ -21,9 +21,35 @@
 
     <div class="cl-timeline">
 
-      <!-- Test Batch 1.5 -->
+      <!-- Test Batch 1.6 -->
       <div class="cl-entry">
         <div class="cl-badge cl-badge--new">Latest</div>
+        <div class="cl-card">
+          <div class="cl-date-top">May 30, 2026</div>
+          <h2 class="cl-version">Test Batch 1.6 — Mobile, Forum Overhaul, Sidebar Resize, Settings Sync</h2>
+          <ul class="cl-list">
+            <li>[*] <strong>Remember Me cache fixed</strong> — both <code>rg_token</code> and <code>rg_user</code> are now cleared from the opposite store on login; "Remember Me" is checked by default</li>
+            <li>[+] <strong>Discord-style expanded member list</strong> — clicking "See all" on Active Members or Online Mentors expands to a flat Discord-style list (avatar, name, role, online dot) with smooth animation</li>
+            <li>[+] <strong>Featured Discussions real data</strong> — Dashboard Featured Discussions panel now pulls live forum posts (top 5: pinned first, then by upvotes) via <code>GET /api/forum/posts/featured</code></li>
+            <li>[+] <strong>Context-aware navbar search</strong> — search bar in topbar is now enabled; placeholder and behavior change per page (e.g. "Search forum posts…" on Forum page); debounced 300ms</li>
+            <li>[*] <strong>Forum right sidebar replaced</strong> — old profile widget / trending / polls sidebar removed; new dashboard-style right panel (Active Members, Online Mentors, Featured Discussions) added with 5s real-time heartbeat</li>
+            <li>[+] <strong>Drag-to-resize + collapsible right sidebar</strong> — drag the left edge of the right panel to resize (200–480px); click chevron to collapse/expand; width and state persisted to localStorage</li>
+            <li>[+] <strong>Mobile support</strong> — hamburger menu + slide-in sidebar overlay at 768px; right panel auto-hides on small screens; responsive layouts for Forum, Profile, and Auth pages</li>
+            <li>[*] <strong>Profile page layout fixed</strong> — content now fills the full page width instead of being centered in a narrow column</li>
+            <li>[*] <strong>Settings sync</strong> — avatar loaded from server (<code>/api/auth/me</code>), no longer reads stale <code>protocol_avatar_url</code>; unused themes removed; JetBrains Mono added as recommended font option</li>
+          </ul>
+        </div>
+        <div class="cl-contributors">
+          <div class="cl-contributor">
+            <div class="cl-avatar" style="background: var(--clr-primary)">S</div>
+            <span class="cl-contributor-name">Spider</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Batch 1.5 -->
+      <div class="cl-entry">
+        <div class="cl-badge">TB 1.5</div>
         <div class="cl-card">
           <div class="cl-date-top">May 29, 2026</div>
           <h2 class="cl-version">Test Batch 1.5 — Dashboard Shell, Real-time, Settings/Buy/Forum Revamp, Profile</h2>

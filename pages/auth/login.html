@@ -105,7 +105,7 @@
           </div>
 
           <div class="form-row">
-            <label><input type="checkbox" id="remember-me" /> Remember me</label>
+            <label><input type="checkbox" id="remember-me" checked /> Remember me</label>
             <a href="#">Forgot password?</a>
           </div>
 
@@ -231,6 +231,8 @@
         }
         localStorage.setItem('rg_token', data.token);
         localStorage.setItem('rg_user',  JSON.stringify(data.user));
+        sessionStorage.removeItem('rg_token');
+        sessionStorage.removeItem('rg_user');
         window.location.href = '../dashboard/dashboard.html';
       } catch {
         showError('Network error during Google sign-in.');
@@ -278,11 +280,12 @@
 
         const remember = document.getElementById('remember-me')?.checked;
         const store = remember ? localStorage : sessionStorage;
+        const other = remember ? sessionStorage : localStorage;
         store.setItem('rg_token', data.token);
         store.setItem('rg_user', JSON.stringify(data.user));
-        // Always clear the other store to avoid stale data
-        if (remember) sessionStorage.removeItem('rg_token');
-        else localStorage.removeItem('rg_token');
+        // Clear from the opposite store to avoid stale data
+        other.removeItem('rg_token');
+        other.removeItem('rg_user');
         window.location.href = '../dashboard/dashboard.html';
       } catch (err) {
         showError('Network error. Please try again.');
