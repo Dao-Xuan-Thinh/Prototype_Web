@@ -6,6 +6,38 @@
   <title>ResearchGate — Connect knowledge. Empower research.</title>
   <link rel="stylesheet" href="css/shared.css" />
   <link rel="stylesheet" href="css/landing.css" />
+  <script>
+    // If user already has a valid session, skip the role-selection screen
+    (function() {
+      function getCookieVal(name) {
+        var m = document.cookie.match('(?:^|;)\\s*' + name + '=([^;]+)');
+        return m ? decodeURIComponent(m[1]) : null;
+      }
+      // Sync check: localStorage → sessionStorage → client-side cookie
+      var token = localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token') || getCookieVal('rg_tkn');
+      if (token) {
+        window.location.replace('pages/dashboard/dashboard.html');
+        return;
+      }
+      // Async check: server-side HttpOnly cookie (rg_session)
+      // Hide page briefly to prevent flash of role-selection while checking
+      document.documentElement.style.visibility = 'hidden';
+      fetch('/api/auth/session', { credentials: 'include' })
+        .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
+        .then(function(data) {
+          if (data && data.token) {
+            sessionStorage.setItem('rg_token', data.token);
+            if (data.user) sessionStorage.setItem('rg_user', JSON.stringify(data.user));
+            window.location.replace('pages/dashboard/dashboard.html');
+          } else {
+            document.documentElement.style.visibility = '';
+          }
+        })
+        .catch(function() {
+          document.documentElement.style.visibility = '';
+        });
+    })();
+  </script>
 </head>
 <body>
 
