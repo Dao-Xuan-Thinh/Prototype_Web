@@ -266,7 +266,8 @@
         const res  = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ identifier, password })
+          credentials: 'include',
+          body: JSON.stringify({ identifier, password, rememberMe: document.getElementById('remember-me')?.checked ?? true })
         });
         const data = await res.json();
 
@@ -279,13 +280,23 @@
         }
 
         const remember = document.getElementById('remember-me')?.checked;
-        const store = remember ? localStorage : sessionStorage;
-        const other = remember ? sessionStorage : localStorage;
-        store.setItem('rg_token', data.token);
-        store.setItem('rg_user', JSON.stringify(data.user));
-        // Clear from the opposite store to avoid stale data
-        other.removeItem('rg_token');
-        other.removeItem('rg_user');
+        if (remember) {
+          localStorage.setItem('rg_token', data.token);
+          localStorage.setItem('rg_user', JSON.stringify(data.user));
+          sessionStorage.removeItem('rg_token');
+          sessionStorage.removeItem('rg_user');
+          // Client-side cookie as fast sync fallback (30 days)
+          const exp = new Date(Date.now() + 30 * 24 * 3600 * 1000).toUTCString();
+          document.cookie = 'rg_tkn=' + encodeURIComponent(data.token) + '; expires=' + exp + '; path=/; samesite=lax';
+          document.cookie = 'rg_usr=' + encodeURIComponent(JSON.stringify(data.user)) + '; expires=' + exp + '; path=/; samesite=lax';
+        } else {
+          sessionStorage.setItem('rg_token', data.token);
+          sessionStorage.setItem('rg_user', JSON.stringify(data.user));
+          localStorage.removeItem('rg_token');
+          localStorage.removeItem('rg_user');
+          document.cookie = 'rg_tkn=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+          document.cookie = 'rg_usr=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+        }
         window.location.href = '../dashboard/dashboard.html';
       } catch (err) {
         showError('Network error. Please try again.');

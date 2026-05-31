@@ -242,7 +242,11 @@ function getAuthHeaders(includeJson = true) {
 function promptLogin(message) {
   alert(message);
   const loginBtn = document.getElementById('open-login');
-  if (loginBtn) loginBtn.click();
+  if (loginBtn) {
+    loginBtn.click();
+  } else {
+    window.location.href = (window.AppConfig && window.AppConfig.BASE ? window.AppConfig.BASE : '') + 'pages/auth/login.html';
+  }
 }
 
 function updateAvatarPreview(avatarUrl) {
@@ -1021,7 +1025,8 @@ function openThread(event, postId) {
   document.getElementById('postsContainer').style.display = 'none';
   document.getElementById('filterBar').style.display = 'none';
   document.getElementById('threadContainer').style.display = 'block';
-  document.querySelector('.forum-layout').classList.add('thread-mode');
+  const forumLayout = document.querySelector('.forum-layout');
+  if (forumLayout) forumLayout.classList.add('thread-mode');
   cancelReply(); window.scrollTo({ top: 0, behavior: 'smooth' }); renderThreadView();
 
   if (post.source !== 'local-poll' && !post.threadLoaded) {
@@ -1036,7 +1041,8 @@ function closeThread() {
   document.getElementById('postsContainer').style.display = 'flex';
   document.getElementById('filterBar').style.display = 'flex';
   document.getElementById('threadContainer').style.display = 'none';
-  document.querySelector('.forum-layout').classList.remove('thread-mode');
+  const forumLayout = document.querySelector('.forum-layout');
+  if (forumLayout) forumLayout.classList.remove('thread-mode');
   renderPosts();
 }
 
@@ -1064,7 +1070,6 @@ async function renderPosts() {
   const container = document.getElementById('postsContainer');
   if(!container) return;
   container.innerHTML = filtered.length === 0 ? '<div style="text-align:center; padding: 40px; color: var(--clr-muted); background: var(--clr-surface); border-radius: 12px; border: 1px dashed var(--clr-border);">No posts to display.</div>' : filtered.map(p => generatePostHTML(p, false)).join('');
-  renderWidgets();
 }
 
 // Expose global forum search for context-aware navbar search
@@ -1074,19 +1079,5 @@ window.forumSearch = async function(query) {
   if (posts.length === 0) await fetchPosts();
   renderPosts();
 };
-
-
-    const trending = [...posts].filter(p => p.type === 'post').sort((a, b) => (b.upvotes + (Array.isArray(b.comments)?b.comments.length:0)) - (a.upvotes + (Array.isArray(a.comments)?a.comments.length:0))).slice(0, 3);
-    trendingContainer.innerHTML = trending.length ? trending.map(p => `<div class="widget-item"><div style="font-size:1.2rem;"></div><div><div class="widget-item-title" onclick="openThread(null, ${p.id})">${p.title}</div><div class="widget-item-meta">${p.upvotes} Votes • By ${p.author}</div></div></div>`).join('') : '<div style="font-size:0.8rem; color:#94a3b8;">No data yet</div>';
-  }
-  if(pollsContainer) {
-    const polls = [...posts].filter(p => p.type === 'poll').sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0)).slice(0, 3);
-    pollsContainer.innerHTML = polls.length ? polls.map(p => {
-      const safeOptions = Array.isArray(p.pollOptions) ? p.pollOptions : [];
-      const totalVotes = safeOptions.reduce((s,o)=>s+(Number(o.votes)||0), 0);
-      return `<div class="widget-item"><div style="font-size:1.2rem;"></div><div><div class="widget-item-title" onclick="openThread(null, ${p.id})">${p.title}</div><div class="widget-item-meta">${totalVotes} Votes</div></div></div>`
-    }).join('') : '<div style="font-size:0.8rem; color:#94a3b8;">No polls yet</div>';
-  }
-}
 
 

@@ -48,6 +48,8 @@ body::before {
   flex-direction: column;
   z-index: 100;
   overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 0.28s cubic-bezier(0.4,0,0.2,1);
 }
 
 .db-sidebar-header {
@@ -155,6 +157,7 @@ body::before {
   flex-direction: column;
   position: relative;
   z-index: 1;
+  transition: margin-left 0.28s cubic-bezier(0.4,0,0.2,1);
 }
 
 /* =============  TOPBAR  ============= */
@@ -427,12 +430,13 @@ body::before {
 .db-right-panel {
   width: var(--right-w);
   flex-shrink: 0;
-  padding: 24px 20px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
   border-left: 1px solid var(--border);
   min-height: calc(100vh - var(--topbar-h));
+  position: relative;
+  transition: width 0.28s cubic-bezier(0.4,0,0.2,1);
 }
 
 .db-panel-card {
@@ -1045,8 +1049,14 @@ body::before {
 .db-discord-empty { font-size: .8rem; color: var(--text-light); padding: 12px 4px; }
 
 /* ============= RIGHT PANEL DRAG + COLLAPSE ============= */
-.db-right-panel {
-  position: relative;
+.db-rp-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 20px;
+  transition: opacity 0.2s ease;
 }
 .db-rp-drag-handle {
   position: absolute;
@@ -1082,11 +1092,91 @@ body::before {
 .db-rp-collapse-btn:hover { background: var(--purple); color: #fff; border-color: var(--purple); }
 
 .db-rp-collapsed {
+  width: 32px !important;
+  min-width: 32px !important;
+  padding: 12px 0 !important;
+  border-left: 1px solid var(--border);
+  overflow: visible !important;
+}
+.db-rp-collapsed .db-rp-inner {
+  opacity: 0;
+  pointer-events: none;
   overflow: hidden;
-  width: 0 !important;
-  padding: 0 !important;
-  border-left: none;
+  height: 0;
+  padding: 0;
+  flex: none;
 }
 .db-rp-collapsed .db-rp-collapse-btn {
   left: 4px;
+}
+
+/* ---- Left Sidebar Collapse ---- */
+.db-sidebar-toggle-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px;
+  margin: 8px auto;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.db-sidebar-toggle-btn:hover { background: var(--purple); color: #fff; border-color: var(--purple); }
+
+/* Nav label transitions for smooth hide/show on collapse */
+.db-nav-label,
+.db-sidebar-brand,
+.db-hist-btns,
+.db-nav-section-label,
+.db-upgrade-text,
+.db-upgrade-btn-active,
+.db-sidebar-upgrade {
+  transition: opacity 0.2s ease, max-width 0.25s ease, max-height 0.25s ease;
+}
+
+body.db-left-sidebar-collapsed .db-sidebar {
+  width: 64px;
+  overflow: visible;
+}
+body.db-left-sidebar-collapsed .db-main-wrapper {
+  margin-left: 64px;
+}
+/* Section headings / blocks in vertical layout — collapse height */
+body.db-left-sidebar-collapsed .db-sidebar .db-sidebar-brand,
+body.db-left-sidebar-collapsed .db-sidebar .db-hist-btns,
+body.db-left-sidebar-collapsed .db-sidebar .db-nav-section-label,
+body.db-left-sidebar-collapsed .db-sidebar .db-sidebar-upgrade {
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  max-height: 0;
+  margin: 0;
+  padding: 0;
+}
+/* Nav labels in horizontal flex rows — collapse width so icon centers */
+body.db-left-sidebar-collapsed .db-sidebar .db-nav-label {
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  max-width: 0;
+  white-space: nowrap;
+  padding: 0;
+  margin: 0;
+}
+body.db-left-sidebar-collapsed .db-sidebar-logo {
+  justify-content: center;
+}
+body.db-left-sidebar-collapsed .db-sidebar .db-sidebar-header {
+  padding: 18px 8px 10px;
+  justify-content: center;
+}
+body.db-left-sidebar-collapsed .db-sidebar .db-nav-item {
+  justify-content: center;
+  padding: 10px 0;
+  gap: 0;
+}
+body.db-left-sidebar-collapsed .db-sidebar .db-sidebar-toggle-btn {
+  margin: 8px auto;
 }

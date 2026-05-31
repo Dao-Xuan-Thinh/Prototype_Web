@@ -13,10 +13,14 @@
 (function () {
   'use strict';
 
-  function getToken()   { return localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token'); }
+  function getCookie(name) {
+    const m = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  function getToken()   { return localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token') || getCookie('rg_tkn'); }
   function getUser()    {
     try {
-      const raw = localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user');
+      const raw = localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user') || getCookie('rg_usr');
       return raw ? JSON.parse(raw) : null;
     } catch { return null; }
   }
@@ -24,6 +28,21 @@
     ['rg_token','rg_user'].forEach(k => {
       localStorage.removeItem(k); sessionStorage.removeItem(k);
     });
+    document.cookie = 'rg_tkn=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+    document.cookie = 'rg_usr=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+  }
+
+  // Restore session from server HttpOnly cookie when client-side storage is empty
+  async function tryRestoreSession() {
+    if (getToken()) return;
+    try {
+      const r = await fetch('/api/auth/session', { credentials: 'include' });
+      if (r.ok) {
+        const d = await r.json();
+        sessionStorage.setItem('rg_token', d.token);
+        sessionStorage.setItem('rg_user', JSON.stringify(d.user));
+      }
+    } catch {}
   }
 
   // Depth-aware path prefix (for pages 1 or 2 levels deep in /pages/)
@@ -40,16 +59,16 @@
 
   function navItem(page, href, iconSVG, label, disabled) {
     if (disabled) {
-      return `<span class="db-nav-item db-nav-disabled">${iconSVG} ${label} <span class="db-nav-soon">Soon</span></span>`;
+      return `<span class="db-nav-item db-nav-disabled">${iconSVG}<span class="db-nav-label">${label} <span class="db-nav-soon">Soon</span></span></span>`;
     }
     const active = activePage === page ? ' db-nav-active' : '';
-    return `<a href="${base}${href}" class="db-nav-item${active}">${iconSVG} ${label}</a>`;
+    return `<a href="${base}${href}" class="db-nav-item${active}">${iconSVG}<span class="db-nav-label">${label}</span></a>`;
   }
 
   const sidebarHTML = `
     <aside class="db-sidebar" id="db-sidebar">
       <div class="db-sidebar-header">
-        <div class="db-sidebar-logo">
+        <a href="${base}pages/dashboard/dashboard.html" class="db-sidebar-logo" style="text-decoration:none">
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
             <rect x="2" y="2" width="11" height="11" rx="3" fill="#6c47ff"/>
             <rect x="15" y="2" width="11" height="11" rx="3" fill="#6c47ff" opacity="0.55"/>
@@ -57,7 +76,7 @@
             <rect x="15" y="15" width="11" height="11" rx="3" fill="#6c47ff" opacity="0.3"/>
           </svg>
           <span class="db-sidebar-brand"><span>Research</span><span class="brand-gate">Gate</span></span>
-        </div>
+        </a>
         <div class="db-hist-btns">
           <button onclick="history.back()" class="db-hist-btn" title="Back">&#8249;</button>
           <button onclick="history.forward()" class="db-hist-btn" title="Forward">&#8250;</button>
@@ -97,6 +116,10 @@
           'Settings'
         )}
       </nav>
+
+      <button class="db-sidebar-toggle-btn" id="db-sidebar-toggle-btn" onclick="dbShellToggleLeftSidebar()" title="Collapse/Expand sidebar">
+        <svg viewBox="0 0 20 20" fill="none" width="14" height="14"><path d="M13 4l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
 
       <div class="db-sidebar-upgrade">
         <div class="db-upgrade-icon">
@@ -163,12 +186,14 @@
       </div>
     </div>`;
 
-  // Auth guard
-  if (!getToken()) {
-    window.location.href = base + 'pages/auth/login.html';
-  }
-
   function inject() {
+    // Auth guard – redirect if no token (session restore already attempted)
+    const token = getToken();
+    if (!token) {
+      window.location.href = base + 'pages/auth/login.html';
+      return;
+    }
+
     const sidebarRoot = document.getElementById('db-shell-sidebar');
     if (sidebarRoot) sidebarRoot.outerHTML = sidebarHTML;
 
@@ -199,6 +224,32 @@
       searchInput.placeholder = placeholders[ctx] || 'Search…';
     }
 
+    // Restore left sidebar collapsed state
+    if (localStorage.getItem('rg_left_sidebar_collapsed') === 'true') {
+      document.body.classList.add('db-left-sidebar-collapsed');
+    }
+
+    // Apply saved font globally
+    const savedFont = localStorage.getItem('protocol_font');
+    if (savedFont) {
+      document.body.style.fontFamily = "'" + savedFont + "', monospace";
+      const fontLink = document.getElementById('custom-font-link');
+      const FONT_URLS = {
+        'JetBrains Mono': 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap',
+        'Fira Code': 'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap',
+        'Victor Mono': 'https://fonts.googleapis.com/css2?family=Victor+Mono:wght@400;500;600&display=swap',
+        'Space Mono': 'https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap',
+        'Inconsolata': 'https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;500;600;700&display=swap',
+      };
+      if (!fontLink && FONT_URLS[savedFont]) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.id = 'custom-font-link';
+        link.href = FONT_URLS[savedFont];
+        document.head.appendChild(link);
+      }
+    }
+
     // Click outside to close dropdown
     document.addEventListener('click', () => {
       const wrap = document.getElementById('db-shell-user-wrap');
@@ -206,17 +257,25 @@
     });
 
     // Heartbeat
-    const token = getToken();
-    if (token) {
+    const hbToken = getToken();
+    if (hbToken) {
       const heartbeat = () => fetch('/api/auth/heartbeat', {
-        method: 'POST', headers: { Authorization: 'Bearer ' + token }
+        method: 'POST', headers: { Authorization: 'Bearer ' + hbToken }
       }).catch(() => {});
       heartbeat();
       setInterval(heartbeat, 5000);
     }
   }
 
-  // Global functions for the injected HTML
+  window.dbShellToggleLeftSidebar = function() {
+    const collapsed = document.body.classList.toggle('db-left-sidebar-collapsed');
+    localStorage.setItem('rg_left_sidebar_collapsed', collapsed ? 'true' : 'false');
+    const btn = document.getElementById('db-sidebar-toggle-btn');
+    if (btn) {
+      btn.querySelector('svg path').setAttribute('d', collapsed ? 'M7 4l6 6-6 6' : 'M13 4l-6 6 6 6');
+    }
+  };
+
   window.dbShellToggleDropdown = function(e) {
     e.stopPropagation();
     const wrap = document.getElementById('db-shell-user-wrap');
@@ -262,12 +321,31 @@
   };
   window.dbShellDoLogout = function() {
     clearAuth();
+    fetch('/api/auth/signout', { method: 'POST', credentials: 'include' }).catch(() => {});
     window.location.href = base + 'pages/auth/login.html';
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', inject);
-  } else {
+  async function restoreAndInject() {
+    const hadToken = !!getToken();
+    await tryRestoreSession();
     inject();
+    // If session was just restored from server cookie, update topbar with actual user info
+    if (!hadToken && getToken()) {
+      const u = getUser();
+      if (u) {
+        const name = u.full_name || u.username || 'User';
+        const letter = name.charAt(0).toUpperCase();
+        const nameEl = document.querySelector('#db-shell-user-wrap .db-user-name');
+        const avatarEl = document.querySelector('#db-shell-user-wrap .db-user-avatar');
+        if (nameEl) nameEl.textContent = name;
+        if (avatarEl) avatarEl.textContent = letter;
+      }
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', restoreAndInject);
+  } else {
+    restoreAndInject();
   }
 })();

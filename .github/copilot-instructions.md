@@ -133,24 +133,48 @@ window.Auth.saveToken()
 window.Auth.logout()
 ```
 
-**Dashboard pages** (dashboard, settings, buy, forum, profile — TB1.5+) use dual-storage:
+**Dashboard pages** (dashboard, settings, buy, forum, profile — TB1.5+) use triple-storage with cookie fallback (HF1.6.1+):
 ```js
-function getToken() { return localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token'); }
-function getUser()  {
-  const raw = localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user');
+function getCookie(name) {
+  const m = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+  return m ? decodeURIComponent(m[1]) : null;
+}
+function getToken() {
+  return localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token') || getCookie('rg_tkn');
+}
+function getUser() {
+  const raw = localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user') || getCookie('rg_usr');
   return raw ? JSON.parse(raw) : null;
 }
+function clearAuth() {
+  ['rg_token','rg_user'].forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k); });
+  document.cookie = 'rg_tkn=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+  document.cookie = 'rg_usr=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+}
 ```
-- `rg_token` in localStorage = Remember Me checked
-- `rg_token` in sessionStorage only = Remember Me unchecked (cleared on tab close)
-- `rg_user` mirrors the same storage as `rg_token` and holds parsed user object
+- `rg_token` + `rg_user` in **localStorage** + **cookies** (`rg_tkn`, `rg_usr`) = Remember Me checked (30-day cookies)
+- `rg_token` + `rg_user` in **sessionStorage** only = Remember Me unchecked (cleared on browser close)
+- **JWT expiry**: all logins issue 30d tokens (changed from 7d in HF1.6.1); guest tokens are 10d
 
-**Compat shim** — dashboard pages that also run old JS files (e.g., settings.js, forum.js) inject this in a `<script>` block before the page script:
+**Login cookie writing** (in `login.html doLogin()`):
+- Remember Me checked: writes to localStorage + sets 30-day cookies
+- Remember Me unchecked: writes to sessionStorage, clears any cookies
+
+**Compat shim** — dashboard pages that also run old JS files (e.g., settings.js, forum.js) inject this in a `<script>` block before the page script, now with cookie fallback:
 ```html
 <script>
+  function _getCookie(name) {
+    const m = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+    return m ? decodeURIComponent(m[1]) : null;
+  }
   window.Auth = {
-    getToken: () => localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token'),
-    getUser: () => { try { const r = localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user'); return r ? JSON.parse(r) : null; } catch { return null; } }
+    getToken: () => localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token') || _getCookie('rg_tkn'),
+    getUser: () => {
+      try {
+        const r = localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user') || _getCookie('rg_usr');
+        return r ? JSON.parse(r) : null;
+      } catch { return null; }
+    }
   };
   window.AppConfig = { API: '' };
 </script>
@@ -409,8 +433,8 @@ Zen browser-style settings layout:
 - Log out button
 
 **Customization section:**
-- Font picker: 5 options stored in `localStorage.protocol_font`, applied globally via nav.js IIFE
-- Theme selector: 10 options, applied via same `applyTheme()` logic as navbar dropdown
+- Font picker: stored in `localStorage.protocol_font`, applied globally via `applyGlobalFont()` in `nav.js` (old pages) and via `dashboard-shell.js` `inject()` (dashboard pages). Also applied by `dashboard.html` inline script. Changing font saves and reloads font everywhere.
+- Theme selector: options: Light, Dark, Caffeine Black, Caffeine White — applied via same `applyTheme()` logic as navbar dropdown
 - Custom CSS textarea (placeholder only — no execution yet)
 
 **Important**: `settings.html` has its own `<link id="custom-font-link">` — do not use the same ID as nav.js's `nav-font-link`.
@@ -476,21 +500,37 @@ Called in both `POST /api/messages/file` and `POST /api/forum/posts/:id/image` a
 `dashboard-shell.js` is the global chrome injector for all dashboard/inner pages. It replaces `nav.js` for these pages.
 
 **What it injects:**
-- Sidebar (`<aside class="db-sidebar">`) with logo, navigation items, upgrade button
-- Topbar (`<header class="db-topbar">`) with search bar (disabled), notifications, user chip + dropdown
+- Sidebar (`<aside class="db-sidebar">`) with logo (clickable → dashboard), navigation items, left sidebar collapse button, upgrade button
+- Topbar (`<header class="db-topbar">`) with search bar (context-aware), notifications, user chip + dropdown, hamburger (mobile)
 - Logout confirmation modal
+- Mobile sidebar overlay (`#db-sidebar-overlay`)
 
-**Auth guard:** Redirects to `login.html` if no `rg_token` in localStorage or sessionStorage.
+**Auth guard:** Redirects to `login.html` if no `rg_token` (localStorage, sessionStorage, or cookie).
 
 **Heartbeat:** POSTs to `/api/auth/heartbeat` every 5 seconds when logged in.
+
+**Font restore:** On inject, reads `localStorage.protocol_font` and applies globally (fontFamily + Google Fonts link).
+
+**Left sidebar collapse:** On inject, restores `localStorage.rg_left_sidebar_collapsed` by toggling `body.db-left-sidebar-collapsed`. `dbShellToggleLeftSidebar()` toggles and persists.
 
 **User chip dropdown:** Profile → `pages/profile/profile.html`, Settings → `pages/settings/settings.html`, Log Out → opens logout modal.
 
 **Global functions exposed:**
 - `window.dbShellLogout()` — opens the logout confirmation modal
 - `window.dbShellCancelLogout()` — closes it
-- `window.dbShellDoLogout()` — clears auth and redirects to login
+- `window.dbShellDoLogout()` — clears auth (localStorage + sessionStorage + cookies) and redirects to login
 - `window.dbShellToggleDropdown(e)` — toggles user chip dropdown
+- `window.dbShellToggleSidebar()` — mobile sidebar open/close
+- `window.dbShellCloseSidebar()` — mobile sidebar close
+- `window.dbShellToggleLeftSidebar()` — desktop left sidebar collapse/expand (persisted)
+
+**Right panel collapse pattern (HF1.6.1):**
+- Panel cards are wrapped in `<div class="db-rp-inner">` inside the aside
+- Collapsed state: `aside.db-rp-collapsed` → panel gets `width: 32px`, `.db-rp-inner { display: none }`, button stays visible
+- This applies to BOTH `dashboard.html` and `forum.html` right panels
+- Toggle functions (`toggleRightPanel`, `toggleForumRightPanel`) toggle `.db-rp-collapsed` on the `<aside>`
+
+**Context-aware search:** Shell reads `document.body.dataset.searchContext` to set the placeholder. Forum pages use `data-search-context="forum"` and expose `window.forumSearch(query)`.
 
 **CSS variables** used by dashboard pages (defined in `pages/dashboard/dashboard.css`):
 | Variable | Value |
@@ -501,6 +541,8 @@ Called in both `POST /api/messages/file` and `POST /api/forum/posts/:id/image` a
 | `--border` | `#e5e7ef` |
 | `--text-dark` | `#1e1b3a` |
 | `--text-muted` | `#94a3b8` |
+
+**Left sidebar collapse CSS (`body.db-left-sidebar-collapsed`):** Mirrors the 860px mobile breakpoint — sidebar shrinks to 64px, labels/upgrade hidden, toggle button stays visible.
 
 Dashboard pages map these to `--clr-*` via a bridge block in their CSS (see §6 Option B).
 

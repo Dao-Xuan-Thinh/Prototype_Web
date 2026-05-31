@@ -17,6 +17,22 @@ try { sharp = require("sharp"); } catch (e) { sharp = null; }
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || "change_this_secret";
 
+// Helper: parse cookie header string → object
+function parseCookies(req) {
+  const cookies = {};
+  const hdr = req.headers.cookie || '';
+  hdr.split(';').forEach(pair => {
+    const idx = pair.indexOf('=');
+    if (idx < 0) return;
+    cookies[pair.slice(0, idx).trim()] = decodeURIComponent(pair.slice(idx + 1).trim());
+  });
+  return cookies;
+}
+// Helper: build Set-Cookie header value for rg_session
+function sessionCookie(token, maxAge) {
+  return `rg_session=${token}; Max-Age=${maxAge}; Path=/; HttpOnly; SameSite=Lax`;
+}
+
 // --- Email transporter (nodemailer) ---
 const emailConfigured = !!(process.env.EMAIL_USER && process.env.EMAIL_PASS &&
   process.env.EMAIL_USER !== 'your_email@gmail.com');
@@ -435,7 +451,7 @@ app.post("/api/auth/verify-code", (req, res) => {
         const token = jwt.sign(
           { id: user.id, username: user.username, email: user.email, tier: user.tier, role: user.role || "member" },
           JWT_SECRET,
-          { expiresIn: "7d" }
+          { expiresIn: "30d" }
         );
         res.json({ token, user: { id: user.id, username: user.username, email: user.email, tier: user.tier, role: user.role || "member" } });
       }
@@ -502,14 +518,14 @@ app.post("/api/auth/google", async (req, res) => {
           function (err2) {
             if (err2) return res.status(500).json({ error: err2.message });
             const newUser = { id: this.lastID, username, email, tier: 'free', role: 'member' };
-            const token = jwt.sign({ ...newUser }, JWT_SECRET, { expiresIn: "7d" });
+            const token = jwt.sign({ ...newUser }, JWT_SECRET, { expiresIn: "30d" });
             res.json({ token, user: newUser });
           }
         );
       } else {
         const token = jwt.sign(
           { id: user.id, username: user.username, email: user.email, tier: user.tier || 'free', role: user.role || "member" },
-          JWT_SECRET, { expiresIn: "7d" }
+          JWT_SECRET, { expiresIn: "30d" }
         );
         res.json({ token, user: { id: user.id, username: user.username, email: user.email, tier: user.tier || 'free', role: user.role || "member" } });
       }
@@ -521,7 +537,7 @@ app.post("/api/auth/google", async (req, res) => {
 });
 
 app.post("/api/auth/login", (req, res) => {
-  const { identifier, password } = req.body;
+  const { identifier, password, rememberMe } = req.body;
 
   if (!identifier || !password) {
     return res.status(400).json({ error: "All fields are required" });
@@ -540,15 +556,46 @@ app.post("/api/auth/login", (req, res) => {
       const token = jwt.sign(
         { id: user.id, username: user.username, email: user.email, tier: user.tier, role: user.role || "member" },
         JWT_SECRET,
-        { expiresIn: "7d" }
+        { expiresIn: "30d" }
       );
       console.log(`[Login] ${user.username} (id:${user.id})`);
+      if (rememberMe) {
+        res.setHeader('Set-Cookie', sessionCookie(token, 30 * 24 * 60 * 60));
+      }
       res.json({
         token,
         user: { id: user.id, username: user.username, email: user.email, tier: user.tier, role: user.role || "member" },
       });
     }
   );
+});
+
+// --- Restore session from HttpOnly cookie (Remember Me) ---
+app.get("/api/auth/session", (req, res) => {
+  const cookies = parseCookies(req);
+  const token = cookies['rg_session'];
+  if (!token) return res.status(401).json({ error: 'No session' });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const newToken = jwt.sign(
+      { id: decoded.id, username: decoded.username, email: decoded.email, tier: decoded.tier || 'free', role: decoded.role || 'member' },
+      JWT_SECRET, { expiresIn: '30d' }
+    );
+    res.setHeader('Set-Cookie', sessionCookie(newToken, 30 * 24 * 60 * 60));
+    res.json({
+      token: newToken,
+      user: { id: decoded.id, username: decoded.username, email: decoded.email, tier: decoded.tier || 'free', role: decoded.role || 'member' }
+    });
+  } catch {
+    res.setHeader('Set-Cookie', sessionCookie('', 0));
+    res.status(401).json({ error: 'Session expired' });
+  }
+});
+
+// --- Sign out: clear session cookie ---
+app.post("/api/auth/signout", (req, res) => {
+  res.setHeader('Set-Cookie', sessionCookie('', 0));
+  res.json({ ok: true });
 });
 
 // --- Guest Login ---
@@ -634,7 +681,7 @@ app.patch("/api/auth/username", requireAuth, async (req, res) => {
         }
         const token = jwt.sign(
           { id: user.id, username: newUsername, email: user.email, tier: user.tier, role: user.role || "member" },
-          JWT_SECRET, { expiresIn: "7d" }
+          JWT_SECRET, { expiresIn: "30d" }
         );
         res.json({ token, user: { id: user.id, username: newUsername, email: user.email, tier: user.tier, role: user.role || "member" } });
       });
@@ -671,7 +718,7 @@ app.patch("/api/auth/upgrade", requireAuth, (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
     const token = jwt.sign(
       { id: req.user.id, username: req.user.username, email: req.user.email, tier: "premium", role: req.user.role || "member" },
-      JWT_SECRET, { expiresIn: "7d" }
+      JWT_SECRET, { expiresIn: "30d" }
     );
     res.json({ token, user: { ...req.user, tier: "premium" } });
   });

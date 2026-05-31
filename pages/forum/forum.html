@@ -70,6 +70,7 @@
         <button class="db-rp-collapse-btn" id="db-forum-rp-collapse-btn" title="Collapse sidebar" onclick="toggleForumRightPanel()">
           <svg viewBox="0 0 20 20" fill="none" width="14" height="14"><path d="M13 4l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
+        <div class="db-rp-inner" id="db-forum-rp-inner">
 
         <!-- Featured Discussions -->
         <div class="db-panel-card" id="forum-panel-discussions">
@@ -103,6 +104,7 @@
           <div class="db-member-online-label" id="forum-member-label">Connecting...</div>
         </div>
 
+        </div><!-- .db-rp-inner -->
       </aside>
     </div><!-- .db-body -->
   </div>
@@ -161,13 +163,17 @@
   <script>
     // Auth compat shim for forum.js
     window.AppConfig = { API: '/api' };
+    function _getCookie(name) {
+      const m = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+      return m ? decodeURIComponent(m[1]) : null;
+    }
     window.Auth = {
       getToken: function() {
-        return localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token');
+        return localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token') || _getCookie('rg_tkn');
       },
       getUser: function() {
         try {
-          const raw = localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user');
+          const raw = localStorage.getItem('rg_user') || sessionStorage.getItem('rg_user') || _getCookie('rg_usr');
           return raw ? JSON.parse(raw) : null;
         } catch { return null; }
       }
@@ -179,7 +185,10 @@
     // 5-second real-time polling for posts (no white blink — updates in-place via forum.js renderPosts)
     document.addEventListener('DOMContentLoaded', function () {
       // Forum right panel: online users + featured discussions
-      function getToken() { return localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token'); }
+      function getToken() {
+        const m = document.cookie.match('(?:^|; )rg_tkn=([^;]*)');
+        return localStorage.getItem('rg_token') || sessionStorage.getItem('rg_token') || (m ? decodeURIComponent(m[1]) : null);
+      }
 
       async function forumFetchOnline() {
         const token = getToken();

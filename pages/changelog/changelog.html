@@ -21,9 +21,34 @@
 
     <div class="cl-timeline">
 
-      <!-- Test Batch 1.6 -->
+      <!-- HOTFIX 1.6.1 -->
       <div class="cl-entry">
         <div class="cl-badge cl-badge--new">Latest</div>
+        <div class="cl-card">
+          <div class="cl-date-top">May 31, 2026</div>
+          <h2 class="cl-version">Test Batch HOTFIX 1.6.1 — Login Persistence, Forum Fix, Sidebar Animations, Icon-Only Collapse</h2>
+          <ul class="cl-list">
+            <li>[*] <strong>Remember Me — server-side HttpOnly session cookie</strong> — login with "Remember me" now sets an HttpOnly <code>rg_session</code> cookie on the server (30-day, SameSite=Lax); on page load, <code>dashboard-shell.js</code> and <code>dashboard.html</code> call <code>GET /api/auth/session</code> to restore the session if client-side storage is empty; <code>POST /api/auth/signout</code> clears the cookie on logout; client-side <code>rg_tkn</code> / <code>rg_usr</code> cookies also updated to SameSite=Lax</li>
+            <li>[*] <strong>Forum completely fixed</strong> — root cause was orphaned stray code at end of <code>forum.js</code> (dangling <code>trendingContainer.innerHTML</code> + mismatched braces) causing a JavaScript SyntaxError that silently prevented the entire file from loading; removed stray code; also removed call to non-existent <code>renderWidgets()</code>; forum posts now load and "New Post" button works</li>
+            <li>[+] <strong>Sidebar collapse animations</strong> — left sidebar and right panel now animate smoothly (CSS <code>transition: width 0.28s cubic-bezier</code>); nav labels fade with <code>opacity</code> + <code>max-width</code> transition; main content area shifts with matching timing</li>
+            <li>[*] <strong>Left sidebar icons-only when collapsed</strong> — nav labels now use <code>max-width: 0; overflow: hidden</code> (not <code>max-height</code>) so they collapse horizontally; <code>gap: 0</code> added to nav items; icons stay centered at 64px; applies to both dashboard.html static sidebar and shell-injected pages</li>
+            <li>[*] <strong>Right sidebar re-open fixed</strong> — collapse button is outside <code>.db-rp-inner</code> so it stays visible at 32px panel width; button icon flips between ← and → to indicate state</li>
+            <li>[*] <strong>Brand logo/name clickable</strong> — ResearchGate logo and brand name in the left sidebar navigate to dashboard; applies to both dashboard.html and shell-injected pages</li>
+            <li>[*] <strong>Font setting applied globally</strong> — <code>localStorage.protocol_font</code> restored on every dashboard page load via dashboard-shell.js and dashboard.html inline script</li>
+            <li>[*] <strong>JWT tokens extended to 30 days</strong> — all non-guest logins now issue 30d tokens; guest tokens remain 10d</li>
+          </ul>
+        </div>
+        <div class="cl-contributors">
+          <div class="cl-contributor">
+            <div class="cl-avatar" style="background: var(--clr-primary)">S</div>
+            <span class="cl-contributor-name">Spider</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Batch 1.6 -->
+      <div class="cl-entry">
+        <div class="cl-badge">TB 1.6</div>
         <div class="cl-card">
           <div class="cl-date-top">May 30, 2026</div>
           <h2 class="cl-version">Test Batch 1.6 — Mobile, Forum Overhaul, Sidebar Resize, Settings Sync</h2>
